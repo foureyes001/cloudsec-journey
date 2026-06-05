@@ -1,0 +1,60 @@
+# Module 1 — Cloud Concepts & AWS Global Infrastructure
+*CLF-C02 | Day 2-3*
+
+## What is Cloud Computing
+- On-demand delivery of IT services (databases, networking, storage, servers, software) over the internet, pay-as-you-go.
+
+## Evolution of Compute
+Dedicated servers → Virtual Machines (VMs) → Containers → Functions (serverless)
+- Each step = less infrastructure you manage, more abstraction.
+
+## Service Models (IaaS / PaaS / SaaS)
+*The ladder = how much YOU manage. IaaS (most) → SaaS (none).*
+
+| Model | You manage | Example |
+|-------|-----------|---------|
+| **IaaS** — Infrastructure as a Service | OS, apps, data (raw servers) | AWS EC2 |
+| **PaaS** — Platform as a Service | Just your app code | AWS Elastic Beanstalk, Heroku |
+| **SaaS** — Software as a Service | Nothing — just use it | Gmail, Microsoft 365 |
+
+## Cloud Deployment Models
+| Type | Where it runs | Example |
+|------|---------------|---------|
+| **Public** | On a cloud provider (CSP) like AWS | Apps built fully on AWS |
+| **Private** | On company's own datacenters (on-prem) | Hospital internal databases |
+| **Hybrid** | Mix of public + private, connected | Banks (sensitive data on-prem, rest on cloud) |
+
+## Why Companies Move to Cloud
+**Practical reasons:**
+- No server management overhead
+- AWS secures the *infrastructure* — but **your data's security is on you** (Shared Responsibility Model)
+- Startups avoid huge upfront server costs
+
+**AWS's official 6 advantages:**
+1. Trade capital expense for variable expense
+2. Benefit from massive economies of scale
+3. Stop guessing capacity (scale on demand)
+4. Increase speed and agility
+5. Stop spending money maintaining datacenters
+6. Go global in minutes
+
+## AWS Global Infrastructure
+*Mental model: Region = city. AZ = datacenter buildings in that city. Edge location = local kiosks near users.*
+
+| Tier | What it is | Count | Purpose |
+|------|-----------|-------|---------|
+| **Region** | Geographic area with datacenters | ~30+ worldwide | Where you run services; low latency to that area |
+| **Availability Zone (AZ)** | One or more isolated datacenters within a region | 3-6 per region | High availability — survive a single-datacenter disaster |
+| **Edge Location** | CDN cache site (CloudFront) | Hundreds worldwide | Cache content close to users → low latency |
+
+- **AZs** are spaced: far enough that one disaster won't hit all, close enough for fast replication.
+- **Edge locations** cache content for *delivery to* users (not caching user info).
+
+## Global vs Regional Services
+| Type | Behavior | Examples |
+|------|----------|----------|
+| **Global** | Not tied to a region; a setting change applies worldwide | IAM, Route 53, CloudFront |
+| **Regional** | Region-specific; changes only affect the selected region | EC2, S3, RDS, Lambda |
+
+## To revisit / shaky
+- [add anything you're still unsure about here]
