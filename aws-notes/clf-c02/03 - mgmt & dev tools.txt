@@ -1,0 +1,62 @@
+========================================
+AWS CLF-C02  —  03: Management & Dev Tools
+========================================
+
+API (Application Programming Interface)
+- A software interface through which two applications communicate with each other.
+
+ARN (Amazon Resource Name)
+- Uniquely identifies resources across all of AWS.
+- Format:  *1  arn:partition:service:region:account-id:resource-type:resource-id
+    - must start with the literal "arn:"
+    - resource-type is sometimes absent; separator before resource-id is ":" or "/"
+    - some services leave region/account-id blank, e.g. S3:  arn:aws:s3:::bucket-name
+
+AWS CLI
+- Lets you programmatically interact with AWS APIs using commands, in your own terminal.
+
+AWS SDK
+- *2  Libraries to call AWS APIs from INSIDE your own application code, in a language
+      of your choice (Python = boto3; also JS, Java, etc.).
+
+AWS CloudShell
+- Browser-based shell built into the AWS Console (pre-authenticated, CLI pre-installed).
+
+IaC (Infrastructure as Code)
+- Automate creating, deploying, updating, and destroying cloud infrastructure.
+- AWS has 2 ways to write IaC:
+
+  1) AWS CloudFormation  —  declarative IaC tool
+     - what you see is what you get (you describe the desired end state)
+     - more detailed, less chance of misconfig
+     - *3 *4  uses JSON and YAML  (declarative config/template formats, NOT scripting languages)
+
+  2) AWS CDK (Cloud Development Kit)  —  imperative IaC tool
+     - you say what you want, the rest is filled in
+     - more abstraction = less visibility (a simplification, not a hard rule)
+     - uses Python and other real programming languages
+
+- CloudFormation provides IaC as a text file; CDK does the same but lets you write in
+  friendlier languages — CDK synthesizes DOWN TO a CloudFormation template under the hood.
+
+AWS Access Keys
+- Required for programmatic access to AWS (outside the Console).
+- Prefer IAM roles where supported; for CLI on your own laptop, access keys are normal.
+- NEVER commit keys -> add Python entries to .gitignore before any commit.
+
+---- CloudShell vs CLI vs SDK  (exam: recognition level) ----
+- CLI        : commands typed in your OWN terminal; local scripting/automation (needs keys configured)
+- SDK        : libraries to call AWS from INSIDE app code, per language (boto3 = Python)
+- CloudShell : browser terminal INSIDE the Console, pre-authenticated, CLI pre-installed, zero setup
+- All three hit the SAME AWS APIs — they differ in WHERE they run and HOW you authenticate.
+
+To revisit / shaky:
+- (your call — add what felt fuzzy)
+
+----------------------------------------
+* mistakes I made:
+*1  dropped the leading "arn:" in the ARN format
+*2  SDK definition missed "calls AWS from inside your own code"
+*3  wrote "YMAL" instead of YAML
+*4  called JSON/YAML "scripting languages" — they're declarative config formats
+========================================

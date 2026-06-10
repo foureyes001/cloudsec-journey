@@ -1,0 +1,144 @@
+=========================================================
+ AWS CLF-C02 NOTES  |  02 - GLOBAL INFRASTRUCTURE & ARCHITECTURE
+=========================================================
+
+(*) = a spot I got wrong on the first pass and corrected.
+      Full review list is at the bottom.
+
+
+GLOBAL INFRASTRUCTURE
+---------------------
+- Globally distributed infrastructure such as data centers that are
+  physically connected with each other.
+- Note: one Availability Zone can contain more than one data center.
+
+
+FAULT DOMAINS & FAULT ISOLATION
+-------------------------------
+- (*) A fault domain = a set of resources that share a single point of
+  failure, so that if something harmful happens (bad software, hardware
+  failure, etc.) the problem is CONTAINED inside that domain and does
+  not spread to other domains.
+- (*) Isolation boundaries get bigger in this order:
+  data center  ->  Availability Zone  ->  Region.
+  Each level is a larger fault-isolation boundary.
+  ("Fault level" is not a real term - removed.)
+
+
+AZ & REGION DESIGN
+------------------
+(*) These are AZ/Region design facts - NOT the definition of fault
+    tolerance itself (that is under the pillars below).
+- Each Region is completely isolated from every other Region.
+- Each Availability Zone within a Region is connected by private
+  physical links to transmit data with low latency.
+- (*) Each AZ is designed as an independent FAULT domain
+  (not "availability domain").
+
+
+EDGE / PoP SERVICES  (on-ramp vs off-ramp)
+------------------------------------------
+- Edge locations move data at high speed throughout the global AWS
+  infrastructure (used as on-ramp AND off-ramp).
+- (*) AWS Global Accelerator - routes user traffic over the AWS PRIVATE
+  BACKBONE to the nearest/healthiest APPLICATION ENDPOINT, using static
+  anycast IPs. (On-ramp; about reaching your app endpoints fast.)
+- S3 Transfer Acceleration - fast uploads to S3 buckets from end users
+  (on-ramp).
+- CloudFront - uses edge locations as an off-ramp to deliver content to
+  consumers at low latency (CDN).
+- Point of Presence (PoP) - an interface between the AWS network and the
+  consumer; can take the form of data centers as well.
+  PoP resources are edge locations and regional edge caches.
+
+
+PRIVATE CONNECTIVITY
+--------------------
+- (*) VPC Endpoint (dropped the word "services") - lets you reach AWS
+  services PRIVATELY, keeping traffic on the AWS network and off the
+  public internet.
+- AWS Direct Connect - a private, dedicated network connection between
+  your office/on-prem and AWS.
+    - helps reduce network cost for better throughput
+    - generally more consistent connectivity than a common ISP
+
+
+HYBRID & EDGE  (AWS outside the normal Region)
+----------------------------------------------
+- (*) Local Zones - data centers placed very close to large METROS /
+  population centers (not "regions") to give lower latency. Purpose:
+  support demanding apps that need good connectivity (streaming, ML).
+- (*) AWS Wavelength - embeds AWS compute INSIDE telecom 5G / carrier
+  networks for ultra-low latency to mobile users. Compute runs at the
+  carrier edge, NOT on the end device.
+- (*) AWS Outposts (I wrote "data outpost" - wrong name) - AWS-managed
+  hardware racks installed in YOUR OWN data center, for running AWS
+  services on-premises (latency / data-residency reasons).
+
+
+DATA RESIDENCY / SOVEREIGNTY / GOVCLOUD
+---------------------------------------
+- Data residency - the geographic location where data physically resides
+  (e.g., data centers in New York or any particular place).
+- Data sovereignty - the jurisdictional/legal rights that can be imposed
+  on data because it lives within a given jurisdiction.
+- GovCloud - isolated Regions for government agencies to store sensitive
+  but unclassified data; can be secured manually by the customer.
+
+
+AWS CONFIG
+----------
+- Create rules to check the configuration of resources. If a resource
+  deviates from the rule, the customer is notified (non-compliance).
+
+
+ARCHITECTURE PILLARS  (what a cloud architect must ensure)
+----------------------------------------------------------
+- Availability - ensure there is no single point of failure
+  (system stays accessible).
+- High scalability - servers can scale up / scale out / scale down
+  depending on need.
+- High elasticity - ability to AUTOMATICALLY scale up or down depending
+  on usage. (The "automatic" part is what separates elasticity from
+  plain scalability.)
+- High fault tolerance - no single point of failure + failover (traffic
+  shifts from primary to secondary so the service keeps running if the
+  primary fails).
+- (*) High durability - data is NOT lost or corrupted over time
+  (e.g., S3 is about 11 nines of durability). This is NOT disaster
+  recovery - the recovery strategies are their own section below.
+
+
+DISASTER RECOVERY STRATEGIES
+----------------------------
+(*) Moved out of "durability" - DR is its own concept, measured by
+    RTO/RPO. The cost/speed ordering below is correct.
+- Backup and restore  - low cost, slow recovery: restore the backup
+  onto new infrastructure.
+- Pilot light         - medium cost, medium recovery: core data
+  replicated with minimal service running.
+- Warm standby        - higher cost, faster recovery: a scaled-down
+  version of the infra is already running and ready to scale up.
+- Multi-site active/active - highest cost, near-real-time recovery
+  (seconds): infra fully ready and serving as normal.
+- S3 buckets provide highly DURABLE (and highly available) storage.
+
+
+=========================================================
+ (*) MISTAKES I MADE - REVIEW THESE (likely exam traps)
+=========================================================
+1. Fault domain - said "domains vulnerable to software"; it is a SET OF
+   RESOURCES sharing a single point of failure. Hierarchy: DC -> AZ ->
+   Region. ("Fault level" isn't a term.)
+2. "Availability domain" - an AZ is an independent FAULT domain, not
+   "availability domain."
+3. Global Accelerator - it is AWS-backbone routing to APP ENDPOINTS via
+   static IPs, not "reach global resources."
+4. VPC Endpoint - I wrote "endpoint services"; the basic term is just
+   VPC Endpoint (private path to AWS services).
+5. "Data outpost" - wrong name. It is AWS OUTPOSTS = AWS hardware in
+   YOUR data center.
+6. Wavelength - runs compute at the 5G CARRIER EDGE, NOT on end devices.
+7. Local Zones - near METROS / population centers, not "regions."
+8. Durability =/= Disaster Recovery - durability = data not lost
+   (11 nines); the 4-tier recovery list is DR (RTO/RPO). Biggest trap.
