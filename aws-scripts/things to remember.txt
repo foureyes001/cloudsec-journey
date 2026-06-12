@@ -1,0 +1,3 @@
+client interface returns dictionaries and lists -> access with ["key"], not .attribute.
+.attribute is for sercer interface
+

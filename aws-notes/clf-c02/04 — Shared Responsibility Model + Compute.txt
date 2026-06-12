@@ -1,0 +1,43 @@
+AWS SHARED RESPONSIBILITY MODEL + COMPUTE
+==========================================
+
+SHARED RESPONSIBILITY MODEL (SRM)
+- customers are responsible for security IN the cloud - data, configuration, code, access controls
+- aws is responsible for security OF the cloud - hardware, operation of managed services and global infrastructure
+- gradient rule: the more managed the service, the less the customer is responsible for
+  (IaaS -> PaaS -> SaaS/FaaS = my share keeps shrinking)
+
+memorize (anchors, derive the rest from these):
+EC2 (IaaS)      -> customer: guest OS, patching, config, data | aws: hypervisor, physical
+Lambda (FaaS)   -> customer: your code only                   | aws: everything else
+SaaS (WorkDocs) -> customer: your data + sharing/access config| aws: everything else
+
+- bare metal edge case: customer owns even the host OS/hypervisor layer (aws gives no hypervisor)
+- microservices with containers - mix and match languages, better utilisation of resources
+  (just worry about data, code and some configs)
+- serverless/functions - you dont MANAGE servers (they still exist, aws manages them),
+  just worry about ur data and code
+
+EC2 (core)
+- allows us to launch virtual machines
+- the VM is called an instance, it is a highly configurable server
+- one of the backbones of aws as majority of other services use EC2 as underlying servers
+
+COMPUTE ONE-LINERS (recognition tier)
+- nitro systems - dedicated hardware + lightweight hypervisor for newer EC2 instances,
+  for enhanced security and faster innovation
+- HPC - cluster of thousands of servers with fast connections, for complex problems
+- edge computing - pushing workloads close to destination devices (phones, IoT)
+- hybrid computing - workloads run on-premises (own data center) AND in the cloud
+- EC2 autoscaling groups (ASG) - automatically adds or removes EC2 servers based on traffic
+- elastic load balancer (ELB) - distributes traffic to multiple instances,
+  reroutes from unhealthy to healthy instances
+- compute optimiser - ML on usage history -> rightsizing recommendations (cut cost + perf)
+- aws batch - plans, schedules and runs batch workloads, can use spot to save money
+- pricing teaser: 3 ways to pay less - commit (reserved/savings plans) or accept
+  interruption (spot). full notes when the pricing section comes, dont duplicate here
+
+TO REVISIT / SHAKY
+- hybrid vs VPC confusion (i wrote VPC when i meant on-prem)
+- serverless != no servers, aws manages them
+- ELB + ASG together = the "elasticity / high availability" exam answer
