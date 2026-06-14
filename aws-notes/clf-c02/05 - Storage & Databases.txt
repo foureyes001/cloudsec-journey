@@ -1,0 +1,94 @@
+AWS CLF-C02 NOTES -- STORAGE & DATABASES
+(my notes, corrected + numbers verified vs AWS docs, Jun 2026)
+
+============================================================
+S3 (Simple Storage Service)
+============================================================
+- Object storage. Files are stored as "objects", not on a disk / filesystem.
+- An object = the data (value) + a key (its unique name in the bucket) + metadata.
+- Bucket = a flat container that holds objects directly.
+    - bucket name must be GLOBALLY unique (across all AWS accounts).
+    - structure is FLAT. the "folders" in the console are NOT real folders,
+      they're just key prefixes (part of the object's name).
+- No limit on total storage or number of objects.
+    - max size of a single object = 5 TB.
+    - single PUT upload max 5 GB; above that use multipart upload.
+
+DURABILITY vs everything else (the key idea):
+- ALL S3 storage classes have the SAME durability = 11 nines (99.999999999%).
+- durability does NOT change between classes.
+- what DOES change between classes = availability, cost, retrieval time,
+  and whether data sits in 1 AZ or many.
+
+STORAGE CLASSES:
+- S3 Standard
+    - frequent access, lowest latency, highest storage cost.
+    - 99.99% availability, stored across >=3 AZs.
+- S3 Intelligent-Tiering
+    - auto-moves objects between tiers based on how often they're accessed.
+    - use when the access pattern is unknown / changing.
+- S3 Standard-IA (Infrequent Access)
+    - data accessed rarely but needed fast when you do need it.
+    - same 11 nines durability, ~99.9% availability.
+    - cheaper storage BUT you pay a per-GB retrieval fee.
+- S3 One Zone-IA
+    - like Standard-IA BUT stored in ONE AZ only.
+    - still 11 nines durable by design, but data CAN be lost if that AZ is destroyed.
+    - cheapest IA option, lower availability. single-AZ is the whole point
+      (NOT "lower durability").
+- S3 Glacier -- archival, THREE tiers (not two):
+    - Glacier Instant Retrieval -> archival cost but MILLISECOND access.
+    - Glacier Flexible Retrieval (old name "S3 Glacier") -> minutes to hours.
+    - Glacier Deep Archive -> cheapest, ~12-48 hours to retrieve. for 7-10yr retention.
+
+
+============================================================
+STORAGE TYPE -- "which service for which job?"  (high-yield)
+============================================================
+- S3  = OBJECT storage.
+- EBS = BLOCK storage. virtual disk attached to ONE EC2 instance, lives in a
+        single AZ, persists even if the instance stops/terminates, and a
+        STOPPED instance's EBS volume STILL bills.
+- EFS = FILE storage. shared network file system (NFS) that MANY EC2 instances
+        can mount at the same time.
+
+============================================================
+DATABASES
+============================================================
+- Database = a datastore for structured / semi-structured data.
+- Relational = tabular (rows & columns), SQL.
+- Non-relational (NoSQL) = semi-structured, may or may not look tabular.
+- Data warehouse = a relational store but COLUMN-oriented, built for analytics:
+    - does aggregation (averages, totals, grouping) over huge datasets.
+    - returns big analytical queries very fast.
+- Key/value store = a type of NoSQL; simple key -> value; no tabular form needed.
+- Document store = a type of NoSQL that stores documents.
+
+DB SERVICES:
+- DynamoDB = AWS flagship NoSQL (key-value + document). SERVERLESS.
+    single-digit-millisecond latency, scales to billions of records.
+- RDS (Relational Database Service) = managed relational DB.
+    supports multiple SQL engines: MySQL, MariaDB, PostgreSQL, Oracle, SQL Server.
+    - Aurora = AWS's own cloud-native engine (MySQL / PostgreSQL compatible),
+      much faster than standard MySQL, fully managed.
+- Redshift = data warehouse; processes large data & generates analytics quickly.
+
+============================================================
+DB TYPE -- "which service for which job?"  (high-yield)
+============================================================
+- RDS      = relational / SQL.
+- DynamoDB = NoSQL key-value (serverless, single-digit-ms).
+- Redshift = data warehouse / analytics.
+
+============================================================
+TO ADD LATER  (core S3 topics I skipped -- these are NOT optional services,
+they're heavily-tested S3 features)
+============================================================
+- Security: Block Public Access (labbed Day 10), bucket policy vs IAM policy vs ACL,
+  encryption SSE-S3 vs SSE-KMS.
+- Versioning + lifecycle rules.
+
+TO REVISIT / SHAKY:
+- the 3 Glacier tiers + which is ms vs minutes vs hours.
+- One Zone-IA: it's "single AZ", NOT "low durability".
+- exact availability %s and object-size limits = lookups, don't over-memorize.
