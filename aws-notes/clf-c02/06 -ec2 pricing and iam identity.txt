@@ -1,0 +1,166 @@
+EC2 PRICING MODELS + IAM / IDENTITY  --  CLF-C02 notes
+(corrected & verified vs AWS docs, Jun 2026.  * = where I had it wrong)
+
+
+==================  EC2 PRICING MODELS  ==================
+
+Four main ways to pay for EC2: On-Demand, Spot, Reserved Instances, Dedicated.
+Savings Plans are a separate commitment-based discount that applies across these.
+
+On-Demand
+- Pay only for what you use, by the second/hour. No commitment, no upfront. Start/stop anytime.
+- Use: short-term, spiky, unpredictable workloads; dev/test.
+* On-Demand is NOT "low cost." It is the HIGHEST per-hour rate. Its selling point is
+  flexibility (no commitment), not price. The cheap options are Spot and the committed
+  RIs / Savings Plans.
+
+Reserved Instances (RI)
+- A billing discount (not a separate instance) in return for a 1-year or 3-year commitment.
+  Up to ~72% off On-Demand.
+- For STEADY, predictable, long-running workloads.
+* I wrote "flexible and steady" -- RIs are for steady/predictable use. They are NOT the
+  "flexible" choice (that's On-Demand, or Savings Plans).
+- Payment: All Upfront (biggest discount) / Partial Upfront / No Upfront.
+
+  RI classes -- Standard vs Convertible
+  - Standard: biggest discount. CANNOT be exchanged. CAN be sold in the RI Marketplace.
+  - Convertible: smaller discount. CAN be exchanged for a different instance family / OS /
+    tenancy. CANNOT be sold in the Marketplace.
+  * I wrote "standard can be modified, convertible can't be modified." Wrong -- BOTH can be
+    modified (limited attributes: AZ, scope, instance size within the same family, network
+    type). The real difference is EXCHANGE, not modify: Standard can't be exchanged,
+    Convertible can. (My next line -- "standard can't be exchanged, convertible can" -- was right.)
+  * "unused RIs can be sold in the Marketplace" -- only STANDARD EC2 RIs (regional or zonal)
+    can be sold. Convertible RIs can't, and RIs for other services (RDS, ElastiCache, etc.)
+    can't. Must register as a seller; at least 1 month must remain on the term.
+
+  RI scope -- Regional vs Zonal
+  - Regional RI: discount applies across any AZ in the Region, but does NOT reserve capacity.
+  - Zonal RI: tied to one specific AZ and DOES reserve capacity there.
+
+Spot Instances
+- AWS sells spare/unused EC2 capacity at a steep discount (up to ~90% off On-Demand).
+- Use: fault-tolerant, interruptible work -- batch jobs, CI, big-data processing.
+  Never for anything that must stay up.
+* An instance is NOT reclaimed because "a higher-tier customer needs it" (there are no
+  customer "tiers"). AWS interrupts a Spot instance when it needs the capacity back, or if
+  the Spot price rises above your max price. You get a ~2-minute warning; default action is
+  terminate (can also be stop or hibernate, depending on config).
+
+Dedicated (single-tenant hardware)
+- Your instances run on physical hardware dedicated to your AWS account (not shared with
+  other accounts).
+- Two forms: Dedicated Instances (hardware isolated per account) and Dedicated Hosts (a whole
+  physical server you can see/control -- used for BYOL licensing and tighter compliance).
+- Use: regulatory / compliance / licensing requirements.
+* The reason for dedicated hardware is compliance/licensing -- NOT that normal multi-tenant
+  ("virtual") isolation is insecure. AWS's standard shared model is secure; dedicated just
+  satisfies rules that demand physical isolation. Don't frame shared tenancy as "compromised."
+
+Savings Plans
+- A commitment-based discount: commit to a steady amount of compute spend ($/hour) for 1 or
+  3 years, pay lower rates in return. (Like RIs, but you commit to dollars/hour, not to a
+  specific instance.)
+* A Savings Plan does NOT "run services at minimal requirement to save money." It is a spend
+  commitment for a discount; it does not scale or minimize anything on its own.
+- Three types:
+  - Compute Savings Plans -- most flexible; apply across EC2, AWS Lambda, AWS Fargate, any
+    region/family/OS/tenancy. (up to ~66%)
+  - EC2 Instance Savings Plans -- biggest discount, but locked to a specific instance family
+    in one Region. (up to ~72%)
+  - SageMaker Savings Plans -- apply to Amazon SageMaker (ML) usage.
+
+
+==================  IDENTITY & ACCESS / SECURITY  ==================
+
+Zero Trust
+- Model: "never trust, always verify" -- every request is authenticated and authorized
+  regardless of where it comes from (inside or outside the network).
+* "AWS has no complete zero-trust model" is misleading. Zero Trust is an APPROACH, not a
+  single product you switch on. AWS gives you the building blocks (IAM, security groups, VPC,
+  AWS Verified Access, etc.) to build a zero-trust architecture.
+
+Security perimeter -- old vs new
+- Old = network-centric: trust anything inside the network / subnet / firewall.
+- New = identity-centric: trust nothing by default; verify identity on every request,
+  wherever it originates.
+
+Directory service
+- A shared information system that stores and manages info about resources -- users, groups,
+  devices, policies -- and controls access to them. Helps locate, manage, administer and
+  organize network resources.
+* It's broader than "maps names to addresses like DNS." DNS only maps hostnames to IPs; a
+  directory service manages identities/objects and access. Name lookup is one small part.
+
+Active Directory (AD)
+- Microsoft's directory service -- the central system that manages users, computers, and
+  their access/logins across a network.
+- On AWS: AWS Directory Service provides managed Microsoft AD. (added)
+
+Identity Provider (IdP)
+- A system that creates, maintains and manages identity information and provides
+  authentication to other services (the "service providers" / relying parties), so users
+  don't manage separate logins. Examples: Google, Facebook (also Okta, Microsoft Entra ID).
+
+Single Sign-On (SSO)
+- Sign in ONCE, then access multiple connected applications without re-entering credentials
+  for each one during that session. One identity -> many apps.
+* Not "never sign in again." You authenticate once per session (and again when the session
+  expires or on a new device). My two notes conflicted -- the accurate version: enter
+  credentials once, then SSO grants access to the other apps without re-typing your password
+  for each.
+
+LDAP -- Lightweight Directory Access Protocol
+- Protocol for accessing and maintaining distributed directory information over an IP network.
+* spelling: "Lightweight," not "Lightwright."
+
+Security key
+- A hardware device used as a second factor for MFA (e.g. a FIDO2 / YubiKey).
+
+IAM -- Identity and Access Management
+- Create and manage AWS users / groups / roles, and use policies to allow or deny access to
+  AWS resources.
+- High-yield CLF points (added, commonly tested):
+  - IAM is GLOBAL, not region-specific.
+  - IAM is FREE.
+  - Authentication = WHO you are (sign-in).  Authorization = WHAT you can do (policies).
+  - Core pieces: Users, Groups, Roles, Policies.
+  - Policies are JSON documents (Effect, Action, Resource).
+  - Roles = temporary credentials, assumed by a user or an AWS service (e.g. EC2 / Lambda)
+    -- "roles, not keys."
+  - Best practice: enable MFA, grant least privilege, don't use root day-to-day.
+
+Principle of Least Privilege
+- Give a user/role the minimum permissions needed for the task -- nothing more.
+- Related: "just enough access" + "just enough time" (only what's needed, only for as long
+  as needed).
+
+AWS account Root user
+- The identity created with the account (the sign-up email); unrestricted access to
+  everything, including billing. Lock it down (MFA + strong password); don't use for daily work.
+- Tasks ONLY root can do (high-yield examples):
+  - Change account settings (account name, email, root password).   (mine -- correct)
+  - Close the AWS account.                                           (mine -- correct)
+  - Change or cancel the AWS Support plan.                           (mine -- correct)
+  - Restore IAM permissions if the only admin user locks themselves out.   (added)
+  - Enable MFA Delete on an S3 bucket.                               (added)
+  - Register as a seller in the Reserved Instance Marketplace.       (added)
+
+AWS SSO  ->  now AWS IAM Identity Center
+- Create or connect a workforce identity once, then centrally manage its access to multiple
+  AWS accounts and applications (one login, SSO). Connects to external IdPs (Okta, Entra ID,
+  Active Directory). No additional charge.
+* "AWS SSO" was RENAMED to "AWS IAM Identity Center" (July 26, 2022). Same service, new name.
+  CLF-C02 may use the new name -- know both.
+
+
+------------------  To revisit / shaky  ------------------
+- RI Standard vs Convertible: MODIFY (both) vs EXCHANGE (Convertible only) vs SELL in
+  Marketplace (Standard only). This is the trap -- drill it.
+- On-Demand = highest price, not lowest. (had it backwards)
+- Spot interruption = AWS reclaims capacity / price > max + 2-min warning. No "customer tiers."
+- Savings Plans = commit $/hr for a discount (not auto-minimizing usage). 3 types: Compute
+  (EC2 + Lambda + Fargate), EC2 Instance (one family/region), SageMaker.
+- AWS SSO is now IAM Identity Center (name change only).
+- Dedicated = compliance/licensing reason, not "shared is insecure."
+- SSO = authenticate once per session, not "never again."
