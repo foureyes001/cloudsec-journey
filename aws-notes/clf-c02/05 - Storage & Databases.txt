@@ -81,14 +81,38 @@ DB TYPE -- "which service for which job?"  (high-yield)
 - Redshift = data warehouse / analytics.
 
 ============================================================
-TO ADD LATER  (core S3 topics I skipped -- these are NOT optional services,
-they're heavily-tested S3 features)
-============================================================
-- Security: Block Public Access (labbed Day 10), bucket policy vs IAM policy vs ACL,
-  encryption SSE-S3 vs SSE-KMS.
-- Versioning + lifecycle rules.
+ADD TO 05 -- S3 SECURITY / ENCRYPTION / VERSIONING   (verified vs AWS docs, Jun 2026)
 
-TO REVISIT / SHAKY:
-- the 3 Glacier tiers + which is ms vs minutes vs hours.
-- One Zone-IA: it's "single AZ", NOT "low durability".
-- exact availability %s and object-size limits = lookups, don't over-memorize.
+PRIVATE BY DEFAULT
+- Buckets/objects private by default; only owner has access. Never public by default.
+- New buckets since Apr 2023: Block Public Access ON + ACLs DISABLED by default. (Existing buckets unchanged.)
+
+BLOCK PUBLIC ACCESS (BPA)  [labbed Day 10]
+- Master block on public access -- OVERRIDES any public grant from ACL or policy.
+- Account-level + bucket-level. ON by default for new buckets.
+- Turn OFF deliberately to host a public/static-website bucket (= your Cloud Resume frontend).
+
+ACCESS CONTROL -- 3 mechanisms
+- IAM policy = identity-based: attached to user/role -> "what this identity can do."
+- Bucket policy = resource-based: JSON on the bucket -> "who can touch this bucket"; can do cross-account.
+- ACL = legacy, coarse, disabled by default -- use policies instead.
+- Decision: default deny; explicit allow (IAM or bucket policy) grants; explicit deny always wins.
+
+ENCRYPTION -- SSE-S3 vs SSE-KMS
+- All new objects auto-encrypted since Jan 2023; SSE-S3 (AES-256) = free base level. Can't disable encryption, only change key type.
+- SSE-S3 = S3-managed keys: free, zero setup, NO key control, NO usage log.
+- SSE-KMS = KMS keys: key rotation/access control + CloudTrail audit trail; but costs (KMS + per-call). S3 Bucket Keys cut that cost.
+- Pick KMS when you need key control / auditing / compliance.
+- (Recognize only: SSE-C = you supply key each request; DSSE-KMS = dual-layer. Skip.)
+
+VERSIONING + LIFECYCLE
+- Versioning: keeps every version; delete = recoverable delete marker; protects vs overwrite/delete.
+  - Once ENABLED -> can only SUSPEND, never fully off.
+  - All versions billed (old ones pile up).
+  - MFA Delete (root-only to enable) = MFA required to delete versions / change state.
+- Lifecycle rules: auto-manage objects --
+  - Transition: move to cheaper class after N days (Standard -> IA -> Glacier -> Deep Archive).
+  - Expiration: delete objects / old versions after N days.
+  - Use: cost optimization; expire old versions so they stop billing.
+
+TRAPS: BPA overrides policies/ACLs . IAM=identity vs bucket policy=resource . SSE-KMS = key-control+audit but costs, SSE-S3 = free . versioning enable->suspend-only . encryption can't be disabled.
