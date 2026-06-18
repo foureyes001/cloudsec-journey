@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agastya Narayan — Résumé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E8EDEA;
+    --ink:#1A2421;
+    --teal:#0E5A53;
+    --muted:#54615B;
+    --rule:#C3CEC9;
+    --font-display:"Fraunces",Georgia,"Times New Roman",serif;
+    --font-body:"Libre Franklin",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    padding:72px 24px 96px;
+  }
+  .page{max-width:760px;margin:0 auto;}
+
+  a{
+    color:var(--teal);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+    transition:border-color .15s ease;
+  }
+  a:hover{border-bottom-color:var(--teal);}
+  a:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:1px;}
+
+  code,.mono{font-family:var(--font-mono);font-size:0.86em;}
+
+  /* Masthead */
+  .masthead{padding-bottom:1.6rem;border-bottom:1px solid var(--rule);}
+  .name{
+    font-family:var(--font-display);
+    font-optical-sizing:auto;
+    font-weight:600;
+    color:var(--teal);
+    font-size:clamp(2.5rem,7vw,3.6rem);
+    line-height:1.02;
+    letter-spacing:-0.015em;
+    margin:0;
+  }
+  .role{
+    font-family:var(--font-mono);
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    font-size:0.72rem;
+    color:var(--muted);
+    margin:1rem 0 0;
+  }
+  .contact{
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    color:var(--ink);
+    margin:0.7rem 0 0;
+    line-height:1.9;
+  }
+  .contact .sep{color:var(--rule);margin:0 0.55em;}
+
+  /* Lead */
+  .lead{
+    font-size:1.05rem;
+    line-height:1.62;
+    color:var(--ink);
+    margin:1.7rem 0 0;
+    max-width:60ch;
+  }
+
+  /* Sections */
+  .section{margin-top:2.4rem;}
+  .section-title{
+    font-family:var(--font-mono);
+    text-transform:uppercase;
+    letter-spacing:0.2em;
+    font-size:0.72rem;
+    font-weight:500;
+    color:var(--ink);
+    margin:0 0 1.1rem;
+  }
+  .section-title::before{
+    content:"";
+    display:block;
+    width:28px;
+    height:2px;
+    background:var(--teal);
+    margin-bottom:0.7rem;
+  }
+
+  /* Skills */
+  .skill-row{
+    display:grid;
+    grid-template-columns:150px 1fr;
+    gap:0.5rem 1.4rem;
+    padding:0.45rem 0;
+  }
+  .skill-row + .skill-row{border-top:1px solid var(--rule);}
+  .skill-label{
+    font-family:var(--font-mono);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:0.7rem;
+    color:var(--muted);
+    padding-top:0.18rem;
+  }
+  .skill-items{color:var(--ink);line-height:1.5;}
+
+  /* Entries */
+  .entry{margin-top:1.3rem;}
+  .entry:first-of-type{margin-top:0;}
+  .entry-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:0.5rem 1.2rem;
+    flex-wrap:wrap;
+  }
+  .entry-title{font-weight:600;font-size:1.02rem;color:var(--ink);}
+  .entry-meta{
+    font-family:var(--font-mono);
+    font-size:0.74rem;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .entry-sub{font-size:0.9rem;color:var(--muted);margin:0.15rem 0 0;}
+  .entry-sub a{font-family:var(--font-mono);font-size:0.84rem;}
+  ul.points{margin:0.55rem 0 0;padding:0;list-style:none;}
+  ul.points li{position:relative;padding-left:1.1rem;margin:0.3rem 0;line-height:1.5;}
+  ul.points li::before{
+    content:"";
+    position:absolute;
+    left:0;top:0.55em;
+    width:5px;height:5px;
+    background:var(--teal);
+  }
+
+  /* Responsive */
+  @media (max-width:640px){
+    body{padding:44px 20px 64px;}
+    .skill-row{grid-template-columns:1fr;gap:0.15rem;padding:0.6rem 0;}
+    .skill-label{padding-top:0;}
+  }
+
+  /* Print */
+  @media print{
+    body{background:#fff;padding:0;font-size:11.5pt;}
+    .page{max-width:none;}
+    a{color:var(--ink);border:none;}
+    .name{color:var(--teal);}
+    .section{margin-top:1.4rem;}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <h1 class="name">Agastya Narayan</h1>
+      <p class="role">Computer Science Undergraduate &mdash; Cloud &middot; Security &middot; Systems</p>
+      <p class="contact">
+        <a href="mailto:narayan.agastya2007@gmail.com">narayan.agastya2007@gmail.com</a><span class="sep">·</span><a href="https://github.com/foureyes001">github.com/foureyes001</a><span class="sep">·</span>Chennai, Tamil Nadu, India
+      </p>
+    </header>
+
+    <p class="lead">
+      Second-year Computer Science undergraduate working toward cloud and cloud-security engineering. Strong networking and Linux fundamentals, with hands-on experience in AWS, Git, and Python automation. Expected graduation July 2029.
+    </p>
+
+    <section class="section">
+      <h2 class="section-title">Technical Skills</h2>
+      <div class="skills">
+        <div class="skill-row">
+          <div class="skill-label">Languages</div>
+          <div class="skill-items">C++ (data structures &amp; algorithms), Python (scripting &amp; automation)</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-label">Cloud / AWS</div>
+          <div class="skill-items">IAM, EC2, S3, CloudWatch, CloudTrail; AWS CLI, Boto3 &mdash; AWS Certified Cloud Practitioner (CLF-C02) in progress</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-label">Tools</div>
+          <div class="skill-items">Git &amp; GitHub, Linux (Kali)</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-label">Networking</div>
+          <div class="skill-items">TCP/IP, subnetting, routing &amp; switching &mdash; Cisco Networking Academy, Modules 1&ndash;17</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Projects</h2>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">cloudsec-journey</span>
+          <span class="entry-meta">Public repository</span>
+        </div>
+        <p class="entry-sub"><a href="https://github.com/foureyes001/cloudsec-journey">github.com/foureyes001/cloudsec-journey</a></p>
+        <ul class="points">
+          <li>20+ algorithm solutions in C++, organized by pattern (arrays &amp; hashing, two pointers, sliding window, binary search, linked lists, stacks).</li>
+          <li>Structured AWS study notes covering cloud concepts, IAM, storage, databases, security, and pricing.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">AWS Security Scripts</span>
+          <span class="entry-meta">Python &middot; Boto3</span>
+        </div>
+        <ul class="points">
+          <li><code>check_public_s3.py</code> &mdash; flags S3 buckets not protected by Block Public Access.</li>
+          <li><code>check_mfa_users.py</code> &mdash; flags IAM users without MFA enabled.</li>
+          <li><code>list_s3_buckets.py</code> &mdash; inventories account buckets via the AWS SDK.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Cloud Resume</span>
+          <span class="entry-meta">In progress</span>
+        </div>
+        <ul class="points">
+          <li>This résumé, built as a static site and deployed on AWS S3 with CloudFront, HTTPS via ACM, and origin hardening (OAC).</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Education</h2>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">B.Tech, Computer Science &amp; Engineering</span>
+          <span class="entry-meta">Expected July 2029</span>
+        </div>
+        <p class="entry-sub">Vellore Institute of Technology (VIT), Chennai, Tamil Nadu</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Certifications &amp; Coursework</h2>
+      <div class="entry">
+        <ul class="points">
+          <li>AWS Certified Cloud Practitioner (CLF-C02) &mdash; in progress.</li>
+          <li>Cisco Networking Academy &mdash; Networking Essentials, Modules 1&ndash;17 (completed).</li>
+          <li>Introduction to Cybersecurity, Coursera (completed).</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
