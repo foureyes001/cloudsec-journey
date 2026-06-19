@@ -1,0 +1,124 @@
+07 - Application Integration, Governance, Business Apps, Provisioning (CLF-C02)
+
+(corrections are marked inline with * ; full list in "MISTAKES I MADE" at the bottom)
+
+
+=== APPLICATION INTEGRATION ===
+
+Application integration = letting two independent apps talk through an interface (keeps them loosely coupled).
+
+Integration patterns:
+
+- Queueing - SQS = Simple QUEUE Service *  [you wrote "Simple Queueing Service"]
+    - messaging system; a consumer PULLS (polls) messages.
+    - * a message is NOT auto-deleted on receipt - the consumer must explicitly DELETE it after processing. Until then it is hidden (visibility timeout) and reappears if not deleted.
+    - poll-based, not real-time, not reactive.
+
+- Streaming
+    - many consumers can react to the same events; events stay in the stream for a retention period (NOT forever - default 24h, up to 365 days).
+    - * mainly PULL (consumers poll the stream). Push only with Kinesis "enhanced fan-out". So not simply "push and pull".
+
+- Kinesis = the AWS streaming service: fully managed collect / process / analyze of streaming data. (correct)
+
+- Pub/Sub - SNS = Simple Notification Service
+    - publish/subscribe pattern. A publisher sends to a TOPIC * [you wrote "event bus" - that is EventBridge, not SNS]. Subscribers subscribe to the topic and each gets every message.
+    - PUSH type (pushes to Lambda, SQS, HTTP/S, email, SMS). (correct)
+
+API Gateway = managed front door for APIs; connects frontends to one or more backends (Lambda, EC2, etc.). Can throttle, authorize, log, and transform requests/responses. (correct)
+
+Step Functions (state machine) = serverless orchestration; coordinates multiple services into a workflow. State machine = a model where the current state moves to the next based on conditions (think flowchart). (correct)
+
+EventBridge (event bus) = serverless event bus; receives events (a service changing state) and routes them to targets based on RULES.
+    - bus types: default, custom, and PARTNER *  [you wrote "SaaS e.b." - official name is "partner event bus", used for SaaS-partner event sources].
+
+Amplify = opinionated framework + managed hosting/infra so devs focus on building web/mobile apps. (recognition-tier - one line is enough)
+
+AppSync = fully managed GraphQL service.
+    - GraphQL API = one API over multiple data sources.
+    - Merged API = combines several source GraphQL APIs into one. (correct; recognition-tier)
+
+
+=== ARCHITECTURE: MONOLITH vs MICROSERVICES ===
+
+- Monolithic = one app does everything; functionality is tightly COUPLED *  [you wrote "tightly occupied"].
+- Microservices = many small apps, each responsible for one thing; functionality is isolated / loosely coupled / independently deployable. (correct)
+
+
+=== GOVERNANCE & MANAGEMENT ===
+
+Control Tower = set up & govern a secure, multi-account AWS environment (a "landing zone") on best-practice baselines. (correct)
+
+Compliance as Code (CaC) = using code/automation to monitor, manage and enforce that resources stay within the expected configuration/rules. (correct)
+
+AWS Config = the CaC-style service: RECORDS resource configs + their changes, and EVALUATES them against rules for compliance *  [you wrote "manage change" - Config tracks & evaluates config; it doesn't manage changes itself, though it can trigger remediation].
+    recall pair: Config = what your config IS / WAS vs rules   |   CloudTrail = WHO did WHAT (API history).
+
+Tagging = key-value labels on resources. Used to organize, identify, search, allocate cost, and drive automation *  [not only "searching"].
+
+Resource Groups = a group of RESOURCES *  [you wrote "a group of tags"] - membership is usually defined BY tags (or by a CloudFormation stack), so you can view/manage them together.
+
+Cloud Adoption Framework (CAF) = guidance for organizations PLANNING / undertaking cloud adoption *  [you wrote "newly migrated companies" - it's for planning the move, not only afterward].
+    - 6 perspectives: Business, People, Governance, Platform, Security, Operations.  (you listed all 6 correctly)
+
+
+=== BUSINESS-CENTRIC SERVICES (recognition-tier - one-liners only) ===
+
+- Amazon Connect = cloud contact center (call center).
+- WorkSpaces = managed virtual desktops (DaaS).
+- WorkDocs = document storage / sharing / collaboration.        [see SERVICE STATUS]
+- Chime = meetings / video conferencing / chat.                 [see SERVICE STATUS]
+- WorkMail = managed business email + calendar.
+- Pinpoint = targeted MULTICHANNEL customer engagement (email, SMS, push) + analytics *  [not just emails].
+- SES = Simple Email Service: bulk AND transactional email (also inbound) *  [does more than just transactional].
+
+
+=== PROVISIONING / DEPLOYMENT ===
+
+Provisioning = allocating / creating resources & services for a customer.
+
+- Elastic Beanstalk = PaaS to deploy & scale web apps; auto-provisions EC2, load balancer, auto-scaling, etc. (app versions stored in S3).
+    * "not production grade for large enterprises" is wrong. Beanstalk IS production-capable. The real trade-off is LESS control/flexibility than building the infra yourself or using containers (ECS/EKS) - not that it's unfit for production.
+
+- OpsWorks = configuration-management service using managed CHEF and PUPPET *  [you wrote "instances of open source config" - name the tools].   [RETIRED - see SERVICE STATUS]
+
+- CloudFormation = Infrastructure as Code (IaC); model & provision AWS resources from templates. (correct)
+
+
+=== SERVICE STATUS - FYI (verified Jun 2026) ===
+
+Not errors in your notes (the descriptions are fine) - just heads-ups, because these are gone/going:
+- OpsWorks - END OF LIFE May 26, 2024 (fully discontinued; AWS points users to Systems Manager).
+- WorkDocs - shut down April 25, 2025.
+- Chime - support ended February 20, 2026 (note: the Chime SDK is a separate thing and still exists).
+- WorkMail - support ending ~March 2027 (still live now).
+For the exam: the Andrew Brown course / older CLF material may still list these. Learn the name + one-liner for recognition only; don't invest beyond that (AWS phases retired services out of exams over time).
+
+
+=== MISTAKES I MADE ===
+
+Clear errors:
+1. SQS = "Simple QUEUE Service", not "Simple Queueing Service".
+2. SQS messages are not auto-deleted on receipt - consumer must DELETE after processing (else they reappear after the visibility timeout).
+3. SNS uses a TOPIC, not an "event bus" (event bus = EventBridge). Real mix-up of two different services.
+4. Monolith is "tightly COUPLED", not "tightly occupied".
+5. Resource Groups group RESOURCES (via tags), not "a group of tags".
+6. Elastic Beanstalk IS production-capable; the trade-off is control/flexibility, not "not production grade".
+7. OpsWorks = managed Chef & Puppet (name the tools).
+
+Precision / over-narrow definitions:
+8. Streaming (Kinesis) is mainly PULL; push only via enhanced fan-out.
+9. EventBridge bus types: default / custom / PARTNER (not "SaaS").
+10. AWS Config RECORDS + EVALUATES config vs rules; it doesn't "manage" change.
+11. Pinpoint = multichannel (not only email); SES = bulk + transactional.
+12. Tags = organize / identify / cost / automation, not only searching.
+13. CAF is for PLANNING adoption (not only "newly migrated"). The 6 perspectives were all correct.
+
+Pattern in these errors: most are term-swaps between similar services and over-narrow one-line definitions. Fix = pin each service to its ONE distinguishing word -> SQS = queue/pull, SNS = topic/push, Kinesis = stream, EventBridge = rules-routing.
+
+
+=== TO REVISIT / SHAKY ===
+
+- SQS visibility timeout + explicit delete (re-read once).
+- SNS topic  vs  EventBridge event bus  vs  SQS queue - keep these three straight (this is the trio you mixed up).
+- Kinesis pull  vs  enhanced-fan-out push.
+- Confirm whether your CLF course still teaches OpsWorks / WorkDocs / Chime; if it skips them, you skip them too.
