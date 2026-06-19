@@ -148,6 +148,11 @@
     background:var(--teal);
   }
 
+  /* Honor reduced-motion */
+  @media (prefers-reduced-motion: reduce){
+    a{transition:none;}
+  }
+
   /* Responsive */
   @media (max-width:640px){
     body{padding:44px 20px 64px;}
@@ -155,13 +160,28 @@
     .skill-label{padding-top:0;}
   }
 
-  /* Print */
+  /* Print — tuned for the recruiter PDF */
+  @page{margin:14mm 16mm;}
   @media print{
-    body{background:#fff;padding:0;font-size:11.5pt;}
+    *{
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+    }
+    body{
+      background:#fff;
+      padding:0;
+      font-size:11pt;
+      line-height:1.5;
+    }
     .page{max-width:none;}
-    a{color:var(--ink);border:none;}
-    .name{color:var(--teal);}
+    a{color:var(--ink);border-bottom:none;}
+    .name{color:var(--teal);font-size:27pt;line-height:1.04;}
+    .role{font-size:8pt;margin-top:0.6rem;}
+    .contact{font-size:9pt;line-height:1.7;}
+    .lead{font-size:11pt;margin-top:1.1rem;}
     .section{margin-top:1.4rem;}
+    .masthead,.section-title{break-after:avoid;page-break-after:avoid;}
+    .entry,.skill-row{break-inside:avoid;page-break-inside:avoid;}
   }
 </style>
 </head>
@@ -234,7 +254,7 @@
           <span class="entry-meta">In progress</span>
         </div>
         <ul class="points">
-          <li>This résumé, built as a static site and deployed on AWS S3 with CloudFront, HTTPS via ACM, and origin hardening (OAC).</li>
+          <li>This résumé, built as a static site on a private AWS S3 bucket and served over HTTPS through CloudFront, with origin access locked to CloudFront via OAC.</li>
         </ul>
       </div>
     </section>
