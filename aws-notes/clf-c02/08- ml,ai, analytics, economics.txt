@@ -1,0 +1,122 @@
+============================================================
+CLF-C02 NOTES 08 - ML/AI, ANALYTICS, CLOUD ECONOMICS, MIGRATION, SUPPORT
+(Andrew Brown, video 10:51 -> 12:03)
+============================================================
+
+Most AI/ML and analytics services below are RECOGNITION-tier: know the
+one-line "what it does", not the internals. The exam asks "which service
+fits THIS use case?" - so drill that direction.
+
+
+1. AI / ML SERVICES
+------------------------------------------------------------
+   SageMaker     - fully managed: build, train, and deploy ML models at scale.
+                   (flagship ML service; the one most likely to be named)
+   CodeGuru      - ML-powered automated code reviews + performance recommendations.
+   Lex           - build conversational interfaces: voice + text chatbots (Alexa's tech).
+   Personalize   - real-time personalized recommendations.
+   Rekognition   - image & video analysis: objects, scenes, faces, text, moderation.
+   Comprehend    - NLP on text: sentiment, entities, key phrases, language detection.
+   Textract      - pull text / handwriting / data from scanned docs (forms, tables); > OCR.
+   Polly         - text -> lifelike speech (text-to-speech).
+   Transcribe    - speech -> text (speech recognition).
+   Translate     - neural machine translation between languages.
+   Kendra        - ML-powered intelligent search across enterprise content. (medium yield)
+
+   GEN AI:
+   Bedrock       - managed service to build GenAI apps on foundation models from MULTIPLE
+                   providers (Anthropic, Meta, Cohere, Amazon Titan...) via one API.
+   GenAI         - AI that generates new content (text, images, video, code).
+   Amazon Q      - GenAI assistant for work + builders. (newer; may appear on newest exams)
+
+   SKIP for CLF (correct, but framework/vendor internals - NOT tested):
+   - MXNet (Gluon = imperative API, Module = symbolic API) - deep-learning framework detail.
+   - CUDA - NVIDIA's GPU parallel-computing platform/API.
+   - GPU - processor for parallel work / image rendering. Only know "GPU instances (P/G)
+     exist for ML & graphics". One-liner, nothing more.
+
+
+2. ANALYTICS / BIG DATA
+------------------------------------------------------------
+   Big data = large volume of structured + unstructured data, too big/fast for traditional
+   databases & tools. (the 3 V's: volume, velocity, variety)
+
+   Athena        - serverless; query S3 data with standard SQL; pay per query.        [CORE]
+   Glue          - serverless ETL (extract, transform, load) + Data Catalog;          [CORE]
+                   discover/prepare/combine data from many sources.
+   Kinesis Data Streams - real-time streaming-data ingestion.                          [CORE]
+                   (family: Data Firehose = load streams to S3/Redshift/etc.;
+                    Managed Service for Apache Flink = stream analytics.)
+   MSK           - Managed Streaming for Apache Kafka; fully managed Kafka.
+   QuickSight    - business-intelligence dashboards & visualizations / insights.   [CORE-ish]
+   Lake Formation- service to SET UP, SECURE, and GOVERN a data lake (the lake lives on S3).
+   EMR           - managed big-data processing (Hadoop / Spark / Hive).
+
+   (already banked earlier: Redshift = data warehouse | RDS = relational | DynamoDB = NoSQL)
+
+
+3. SERVICE STATUS - FYI (verified Jun 2026 vs AWS docs)
+------------------------------------------------------------
+   Descriptions still valid for recognition; AWS phases retired services out of exams
+   over time, so learn name + one-liner only:
+
+   OpenSearch Service - CURRENT name for "Elasticsearch Service" (renamed 2021). Managed
+                        search & analytics cluster. Use "OpenSearch" going forward.
+   CloudSearch        - managed text search engine. Closed to NEW customers (Jul 25 2024);
+                        AWS now steers people to OpenSearch.
+   Data Pipeline      - schedules movement/transformation of data. Maintenance mode / closed
+                        to new customers; AWS points to Glue, Step Functions, or MWAA.
+   Forecast           - time-series forecasting (ML). Closed to new customers (Jul 25 2024).
+
+
+4. CLOUD ECONOMICS
+------------------------------------------------------------
+   TCO   - Total Cost of Ownership: direct + indirect costs of running something;
+           used to compare on-prem vs cloud. (tool: AWS Pricing Calculator)
+   CapEx - capital expenditure: upfront spend on physical infrastructure you own.
+   OpEx  - operational expenditure: ongoing pay-as-you-go spend; no upfront asset.
+           KEY: cloud shifts spending CapEx -> OpEx (pay only for what you use).
+
+
+5. MIGRATION
+------------------------------------------------------------
+   VM Import/Export - import (and export) virtual-machine images to/from EC2.
+   DMS              - Database Migration Service: migrate DBs to AWS; source stays live.
+                      Homogeneous or heterogeneous (use SCT, Schema Conversion Tool, when
+                      the engines differ).
+
+
+6. SUPPORT & FRAMEWORKS
+------------------------------------------------------------
+   TAM - Technical Account Manager: proactive guidance + reactive support.
+         KEY HOOK: a designated TAM comes with ENTERPRISE Support (TAM pool with
+         Enterprise On-Ramp). "Which plan gives a TAM?" -> Enterprise.
+
+   WELL-ARCHITECTED FRAMEWORK (WAF) = how to BUILD well. The exam wants the 6 PILLARS:
+     1) Operational Excellence - run, monitor & continuously improve; automate changes.
+     2) Security               - protect data/systems; least privilege, encryption, traceability.
+     3) Reliability            - recover from failure & meet demand; backups, multi-AZ, auto-scaling.
+     4) Performance Efficiency - use the right, right-sized resources; scale as needed.
+     5) Cost Optimization      - avoid unnecessary spend; pay-as-you-go, right-size, track cost.
+     6) Sustainability         - minimize environmental impact / energy use. (newest, added 2021)
+
+   CAF (Cloud Adoption Framework) = how to PLAN the move. 6 PERSPECTIVES:
+     Business, People, Governance, Platform, Security, Operations.
+   >> Classic exam trap: WAF = 6 pillars (build) vs CAF = 6 perspectives (plan). Don't swap them.
+
+
+------------------------------------------------------------
+TO REVISIT / SHAKY
+------------------------------------------------------------
+- "Which service?" drill (the exam's angle):
+    chatbot=Lex | recommendations=Personalize | image/video=Rekognition |
+    text NLP/sentiment=Comprehend | doc/form extraction=Textract | TTS=Polly |
+    STT=Transcribe | translate=Translate | build/train/deploy=SageMaker.
+- Things I had wrong on the first pass - re-read:
+    * Lex = "conversational" interface (not "conversion").
+    * Lake Formation is the SERVICE that builds/secures the lake; the lake itself lives on S3.
+    * OpEx = ongoing pay-as-you-go (my line trailed into "capital expenses" - ignore that).
+- Search trio: OpenSearch (current) vs CloudSearch (legacy, closing) - both "search".
+- WAF (6 pillars, build) vs CAF (6 perspectives, plan) - the mix-up to avoid.
+- Recognition-only / deprecating, don't over-invest: CloudSearch, Data Pipeline, Forecast.
+- Skip entirely for CLF: MXNet, Gluon/Module API, CUDA.
