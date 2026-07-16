@@ -14,22 +14,34 @@ struct TreeNode {
 };
 
 // 2. Your exact working solution
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
 class Solution {
 public:
-    int diam=0;
-    int height(TreeNode* root)
+    
+    int height(TreeNode* root,int &diam)
     {
         if(!root)
         return -1;
-        int k=1+height(root->left);
+        int k=1+height(root->left,diam);
         
-        int n=1+height(root->right);
+        int n=1+height(root->right,diam);
         
         diam=max(diam,k+n);
         return max(k,n);
     }
     int diameterOfBinaryTree(TreeNode* root) {
-        int n=height(root);
+        int diam=0;
+        int n=height(root,diam);
         return diam;
     }
 };
