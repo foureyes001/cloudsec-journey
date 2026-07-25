@@ -6,3 +6,5 @@
 | 2026-07-14 | 150 | Evaluate RPN | PASS | fixed 4/4 · 182k fuzz vs tree oracle · SAN clean | language-fact footnote; RETIRED |
 
 |2026-07-23 | 567 | Permutation in String | ASSISTED (not cold) | fixed 15/15 (post-guard) · 400k fuzz vs sort-window oracle · reuse-demo ✓ · ASan/UBSan ✓ | New structure (prime-then-drop-left); core correct. REGRESSION: dropped n>m guard present in Jul-17 version → heap-buffer-overflow. Lesson: SSO masks OOB from ASan. Re-test cold ≥Jul 28.
+
+| 2026-07-25 | 226 | Invert Binary Tree | COLD PASS/RETIRED | fixed 6/6 · 200k fuzz vs new-tree mirror · 50k involution · skew 10k · SAN | clean solo, zero hints |
