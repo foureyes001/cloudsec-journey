@@ -10,3 +10,5 @@
 | 2026-07-25 | 226 | Invert Binary Tree | COLD PASS/RETIRED | fixed 6/6 · 200k fuzz vs new-tree mirror · 50k involution · skew 10k · SAN | clean solo, zero hints |
 
 2026-07-28 | 981 | Time-Based Key-Value Store | COLD PASS / RETIRED | fixed 20/20 incl. both round-1 killers · 400x1000 interleaved ops (~200k gets) vs linear-scan oracle · instance isolation ✓ · 200k reuse ✓ · SAN clean | Syntax lookup only (iterator→pair access), no algorithmic help — graded cold. Record-and-advance retained; no BS-family leak. Residual: m[key].size() should be it->second.size() (banked operator[] bug, half-applied).
+
+2026-07-31 | #567 | Permutation in String | COLD PASS → RETIRED | fixed 16/16 (2 asst harness errors excluded) · fuzz 400k, 150,954 true-cases, 0 mism vs sort oracle · reuse 200k · OOB probe |s1|=60 |s|=20 (SSO defeated) ASan silent · UBSan clean | Jul-23 guard regression dead. Contract-reliance note: unsigned underflow if |s1|==0 (LeetCode guarantees ≥1).
