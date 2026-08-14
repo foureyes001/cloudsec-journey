@@ -15,3 +15,5 @@
 
 
 2026-08-01 | #104 | Maximum Depth of Binary Tree | COLD PASS → RETIRED | fixed 8/8 · fuzz 200k, 0 mism vs BFS oracle · deep-skew 8k · reuse 200k · ASan/UBSan clean | Textbook recursion, not the #543 -1 convention. Rule-25 pattern transfer confirmed at 9 days.
+
+2026-08-01 | #138 | Copy List with Random Pointer | ASSISTED (couldn't complete cold) | v1: two-pass map, dummy-head build, correct on LC ex1 & dup-values (verified below). v2: attempt at unified single-pass, has 3 bugs. | Tier 1. Cold re-attempt ≥ Aug 15.
