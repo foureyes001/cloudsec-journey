@@ -1,0 +1,65 @@
+SECTION 8 : ELB & ASG
+
+load balancer - distributes traffic among the servers 
+	uses of LB (which are easy to  forget)-
+	expose single point of access (DNS)
+	provide ssl termination for  websites 
+	enforce sstickiness through cookies
+	separate public from private traffic
+
+ELB - managed by aws and only config is responsibility of consumer
+
+	provides health checks 
+ALB,NLB,GWLB
+
+ALB -load balancing multiple http apps across machines or same machine in different containers .supports websocket and http v2
+	has port mapping feature to redirect to a dynamic port in ECS
+
+	Target groups - 
+	can be ec2 instances  or ecs tasks or lambda functions all can be reached through http 
+	or ip address of a server which is private 
+
+	does health checks at target group level and ALB can route to multiple target groups
+
+
+NLB (network load balancer) - layer 4                              [A]
+	handles tcp, udp, tls - NOT http-aware, cannot read the request
+	extreme performance - millions of req/sec, ~100ms latency (alb ~400ms)
+	★ ONE STATIC IP PER AZ + can attach an elastic ip
+	  -> this is the exam trigger. "needs a static ip" = NLB, every time
+	target groups -
+		ec2 instances
+		ip addresses (private only)
+		★ an ALB - you can front an alb with an nlb
+		  -> gets you static ip AND layer 7 routing together
+	health checks - tcp, http, https (3 protocols, more than layer 4 suggests)
+	preserves client ip natively when targeting by instance id
+	NOT in the free tier (alb and clb are)
+	use when - tcp/udp traffic, extreme perf, static ip requirement
+
+GWLB (gateway load balancer) - layer 3, works on ip packets        [A]
+	purpose - deploy / scale / manage a fleet of THIRD PARTY network
+	  virtual appliances: firewalls, ids/ips, deep packet inspection
+	★ two functions in one box -
+		transparent network gateway - single entry+exit for all vpc traffic
+		load balancer - spreads that traffic across the appliance fleet
+	★ GENEVE protocol, port 6081 - remember the number, it gets asked
+	traffic path -
+		route table -> gwlb endpoint (vpce) -> gwlb -> appliance fleet
+		  -> back -> real destination
+		traffic is inspected before it ever reaches your app
+	target groups - ec2 instances, ip addresses (private)
+	use when - question says "inspect all traffic" / "third party firewall"
+	  / "ids or ips appliance"
+
+★ pick-by-keyword - this is the actual exam skill                  [A]
+	http/https/websocket/grpc, path or host routing   -> ALB
+	tcp/udp, static ip, extreme performance           -> NLB
+	traffic inspection, 3rd party appliance, geneve   -> GWLB
+	anything described as legacy                      -> CLB
+	
+
+	
+
+
+
