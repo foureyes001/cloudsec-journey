@@ -14,6 +14,7 @@ ALB,NLB,GWLB
 
 ALB -load balancing multiple http apps across machines or same machine in different containers .supports websocket and http v2
 	has port mapping feature to redirect to a dynamic port in ECS
+	only has the feature of static dns hostname but not static ip
 
 	Target groups - 
 	can be ec2 instances  or ecs tasks or lambda functions all can be reached through http 
@@ -24,7 +25,7 @@ ALB -load balancing multiple http apps across machines or same machine in differ
 
 NLB (network load balancer) - layer 4                              [A]
 	handles tcp, udp, tls - NOT http-aware, cannot read the request
-	extreme performance - millions of req/sec, ~100ms latency (alb ~400ms)
+	extreme performance - millions of req/sec with ultra low latency
 	★ ONE STATIC IP PER AZ + can attach an elastic ip
 	  -> this is the exam trigger. "needs a static ip" = NLB, every time
 	target groups -
@@ -59,7 +60,35 @@ GWLB (gateway load balancer) - layer 3, works on ip packets        [A]
 	anything described as legacy                      -> CLB
 	
 
+Sticky sessions - to log in to the same instance behind the LB thus eliminating the need of credentials everytime or no loss of session data  ...sticky-> cookies basically
+	two types of app based cookie - custom and application cookie
+	duration based cookie- expire in specific duration
+
+
+CROSS ZONE LB - default enabled and no charge- ALB  
+	   default not enabled and charge- NLB
+
+
+TLS CERTIFICATES IN LB- 
+	manage certs-> ACM
+	https lister :
+ 		needs a default cert
+		add optional certs for multiple domains which can use SNI to access the cert for the specific domain 
+
+SNI - load multiple certs onto one server and based on hostname provide the cert for that domain when asked through the hostname . works for ALB,NLB and CloudFront
+
+
+CONNECTION DRAINING- When a instance der registers or is unhealthy ,new requests are stopped and the completion of already provided requests in execution before stopping is connection draining. set the time alotted for draining as well from 1s to 1 hr
 	
+ASG SCALING POLICIES- 
+	dynamic scaling- 
+		target tracking scaling- eg :to keep avg usage around 40 percent
+		step scaling - eg- scale up when CPU utilisation is above 60 and down when below 20
+	scheduled - increase desired capacity by 2 from 3 to 5 pm everyday
+	predictive -continuously forecast load and schedule it based on that
+
+	SCALING COOLDOWNS - cooldown after scaling happens 
 
 
+	
 
