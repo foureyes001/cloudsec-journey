@@ -1,0 +1,292 @@
+SECTION 9 : RDS, AURORA & ELASTICACHE [A - ENTIRE FILE]
+
+★ = exam trigger word ⚠ = stale-world flag, the course may say otherwise [A] = written by assistant, scaffolding only — OVERWRITE IN YOUR OWN WORDS
+
+========================================================================== RDS — THE BASICS
+
+RDS - managed relational db in the cloud
+
+engines
+	postgres, mysql, mariadb, oracle, sql server, db2, aurora
+
+what aws manages
+	patching, backups, os, provisioning, monitoring
+
+what you give up
+	★ NO SSH ACCESS to the instance
+	exception - RDS Custom (oracle + sql server only)
+
+storage autoscaling
+	you set a max threshold, it grows on its own
+
+why not just run mysql on ec2
+	because then you own every line above
+========================================================================== ★★ READ REPLICAS vs MULTI-AZ — the most tested confusion here
+
+READ REPLICAS = SCALING READS
+
+ASYNC replication
+	-> eventually consistent, reads can be slightly stale
+
+up to 5 (15 for aurora)
+
+can sit same-az / cross-az / cross-region
+
+can be PROMOTED to its own standalone db
+	this breaks replication permanently
+
+★ the app must be changed to point reads at the replica endpoint
+	it is NOT automatic
+
+⚠ cost
+	cross-AZ replica traffic inside one region = free for RDS
+	cross-REGION = paid
+
+MULTI-AZ = HIGH AVAILABILITY / DISASTER RECOVERY
+
+SYNC replication to a standby in another az
+
+★ THE STANDBY IS NOT READABLE
+	it does nothing at all until failover
+
+★ multi-az is NOT for scaling
+	if the question says "improve read performance",
+	the answer is a read replica — never multi-az
+
+one DNS name, failover is automatic (~60-120s)
+
+failover triggers
+	az loss, instance failure, storage failure, network loss
+
+single-az -> multi-az is ZERO DOWNTIME (just modify)
+
+★ THE TRAP
+
+a read replica CAN be placed in another az, which looks like multi-az
+
+it is not — replication is async, and there is no automatic failover
+
+MULTI-AZ DB CLUSTER — a third, newer thing
+
+1 writer + 2 READABLE standbys across 3 az
+
+semi-sync
+
+use when you want HA and want the standbys to do real work
+
+⚠ added 2022 — older recordings do not mention it exists
+========================================================================== RDS BACKUPS
+
+AUTOMATED BACKUPS
+
+daily full snapshot + transaction logs every 5 min
+
+-> ★ point in time recovery (PITR) to any 5-minute point
+
+retention 1-35 days (0 = disabled)
+
+MANUAL SNAPSHOTS
+
+kept as long as you want
+
+★ RESTORING ALWAYS CREATES A NEW DB INSTANCE
+
+never in place — this is the whole point of the backtrack contrast later
+========================================================================== RDS ENCRYPTION & SECURITY
+
+AT REST
+
+KMS
+
+★ must be decided AT LAUNCH
+
+★ TO ENCRYPT AN EXISTING UNENCRYPTED DB — memorise this 3-step chain
+
+1. take a snapshot
+
+2. COPY the snapshot with encryption turned on
+
+3. restore from the copy
+
+★ if the master is unencrypted, its read replicas cannot be encrypted
+
+IN FLIGHT
+
+SSL / TLS
+
+NETWORK ACCESS
+
+security groups — who can reach port 3306 etc
+
+★ IAM vs DATABASE LOGIN — keep these separate
+
+IAM controls the API (create / delete / modify the instance)
+
+IAM does NOT control who logs into the database
+
+exception below
+
+IAM DATABASE AUTHENTICATION
+
+mysql, postgres, mariadb only
+
+token based — ★ the token lasts 15 min
+
+no password stored in the app
+
+why it is the answer - centralises auth in IAM and forces SSL
+========================================================================== RDS PROXY — managed connection pooler
+
+sits between the app and the db, pools and shares connections
+
+★ solves the LAMBDA CONNECTION STORM
+	many short-lived functions each opening a db connection
+	and exhausting the database
+
+★ reduces failover time by up to 66%
+
+★ can ENFORCE IAM auth
+
+★ NEVER publicly accessible — VPC only
+	this is a stock wrong-answer killer
+
+serverless, autoscaling, multi-az
+========================================================================== AURORA
+
+aws proprietary — mysql AND postgres compatible
+
+perf claim - ~5x mysql, ~3x postgres
+
+STORAGE
+
+★ 6 COPIES ACROSS 3 AZ
+
+★ 4 of 6 needed for WRITES
+
+★ 3 of 6 needed for READS
+
+self healing, peer-to-peer replication
+
+★ auto grows in 10GB increments up to 128 TB
+	never pre-provisioned
+
+REPLICAS & FAILOVER
+
+one writer
+
+★ up to 15 read replicas
+
+sub-10ms replica lag
+
+failover typically < 30s (vs 60-120s on RDS multi-az)
+
+★ ENDPOINTS — the aurora-specific trigger
+
+WRITER endpoint
+	always points at the current master, follows failover
+
+READER endpoint
+	CONNECTION-level load balancing across all replicas
+	★ not request-level — one connection sticks to one replica
+
+CUSTOM endpoint
+	a named subset of instances
+	e.g. send analytics/reporting to the big instances only
+
+BACKTRACK
+
+★ rewinds the cluster IN PLACE to a point in time, using no backup
+
+★ contrast with snapshot restore, which creates a NEW cluster
+
+CLONING
+
+copy-on-write — fast and cheap
+
+use - make a staging copy of prod without duplicating storage
+
+GLOBAL DATABASE
+
+1 primary region + ★ up to 5 secondary read-only regions
+
+replication lag typically < 1s
+
+★ promote a secondary in < 1 min RTO
+	-> this is the cross-region DR answer
+
+SERVERLESS v2
+
+autoscales capacity (ACUs) for unpredictable / spiky load
+
+⚠ SERVERLESS v1 IS RETIRED
+	if the course teaches v1 as a live option, that section is dead
+
+MACHINE LEARNING
+
+call sagemaker / comprehend from inside a SQL query
+
+⚠ I/O-OPTIMIZED
+
+storage config for I/O-heavy workloads, added 2023
+
+likely absent from the recording
+========================================================================== ELASTICACHE
+
+managed in-memory cache — redis / memcached / valkey
+
+sub-millisecond, takes read load off the database
+
+★ SECOND USE CASE, often the actual answer
+	makes the app STATELESS by holding SESSION DATA
+	outside the instances
+
+★ THE COST — requires heavy application code changes
+	the app must decide what to cache and when to invalidate
+	if a question offers a "no code change" option,
+	elasticache is probably the wrong answer
+
+★★ REDIS vs MEMCACHED — guaranteed table question
+
+REDIS
+	multi-az with AUTO FAILOVER
+	read replicas
+	PERSISTENCE (AOF)
+	backup + restore
+	sets and sorted sets
+	-> pick redis whenever HA / durability / leaderboards appear
+
+MEMCACHED
+	pure cache
+	SHARDED across nodes (partitioning)
+	multi-threaded
+	★ NO replication, NO persistence, NO backup
+	-> pick memcached only for a plain distributed cache
+
+⚠ VALKEY is now a supported engine (redis fork)
+	newer than most recordings
+
+CACHING STRATEGIES
+
+LAZY LOADING / CACHE-ASIDE
+	only cache what was actually asked for
+	+ only useful data ends up cached
+	- a cache MISS costs 3 trips, and data can go stale
+
+WRITE-THROUGH
+	write to the cache every time you write to the db
+	+ never stale
+	- write penalty, and the cache fills with data nobody reads
+
+TTL
+	expiry — used alongside both of the above
+========================================================================== TO REVISIT / SHAKY
+4/6 write, 3/6 read quorum
+	re-derive why, do not memorise
+
+reader endpoint balances CONNECTIONS not requests
+	understand what that costs you
+
+when the answer is RDS Proxy vs read replica vs elasticache
+
+backtrack vs clone vs snapshot restore
+	three similar-sounding tools, three different jobs
