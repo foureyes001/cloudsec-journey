@@ -29,11 +29,11 @@ struct TreeNode {
 // ==================== SOLUTION — replace this block when re-deriving ====================
 class Solution {
 public:
-    void level(TreeNode *root,vector<vector<int>> &v,int t)
+    void level(TreeNode *root,vector<vector<int>> &v,unsigned t)
     {
         if(!root)
         return;
-        if(v.size()<=t)
+        if(unsigned (v.size())<= t)
         v.push_back({root->val});
         else
         v[t].push_back(root->val);
@@ -44,7 +44,7 @@ public:
 
     vector<vector<int>> levelOrder(TreeNode* root) {
 
-        int t=0;
+        unsigned t=0;
         vector<vector<int>> v;
 
         level(root,v,t);
