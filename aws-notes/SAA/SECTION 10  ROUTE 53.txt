@@ -1,0 +1,343 @@
+SECTION 10 : ROUTE 53 [A - ENTIRE FILE]
+
+★ = exam trigger word ⚠ = stale-world flag, the course may say otherwise [A] = written by assistant, scaffolding only — OVERWRITE IN YOUR OWN WORDS
+
+========================================================================== DNS FUNDAMENTALS
+
+DNS - translates a hostname into an IP address
+
+the backbone of the internet, hierarchical naming structure
+
+TERMS
+
+domain registrar
+	where you buy the name (route 53, godaddy, ...)
+
+DNS records
+	A, AAAA, CNAME, NS ...
+
+zone file
+	the file that holds all the DNS records for a domain
+
+name server
+	the machine that actually resolves queries
+
+TLD - top level domain
+	.com, .in, .gov
+
+SLD - second level domain
+	amazon.com, google.com
+
+FQDN STRUCTURE - api.www.example.com.
+
+.                    root
+
+.com                 TLD
+
+example.com          SLD
+
+www.example.com      subdomain
+
+api.www.example.com  FQDN
+
+HOW A QUERY RESOLVES
+
+browser -> local DNS server (assigned by your ISP)
+
+-> ROOT DNS server (managed by ICANN)
+	replies "ask the .com server"
+
+-> TLD DNS server (managed by IANA)
+	replies "ask example.com's name server"
+
+-> SLD DNS server (managed by the domain registrar)
+	returns the actual IP
+
+the local DNS server caches the answer for the TTL
+========================================================================== ROUTE 53 OVERVIEW
+
+a highly available, scalable, fully managed DNS
+
+★ AUTHORITATIVE DNS
+	the customer can update the records directly
+	(contrast: a caching resolver only repeats what it was told)
+
+also a DOMAIN REGISTRAR — you can buy names here too
+
+★ the ONLY AWS service with a 100% availability SLA
+	stock exam trigger
+
+"53" is the traditional DNS port number
+
+WHAT A RECORD CONTAINS
+
+domain / subdomain name       e.g. example.com
+
+record type                   A / AAAA / CNAME / NS
+
+value                         e.g. 12.34.56.78
+
+routing policy                how route 53 answers the query
+
+TTL                           how long the answer is cached
+
+RECORD TYPES YOU MUST KNOW
+
+A       hostname -> IPv4
+
+AAAA    hostname -> IPv6
+
+CNAME   hostname -> another hostname
+
+NS      the name servers for the hosted zone
+	★ this is the record that controls how traffic
+	  is routed to your domain in the first place
+
+HOSTED ZONES - a container of records for a domain
+
+★ costs $0.50 per hosted zone per month
+
+PUBLIC HOSTED ZONE
+	answers queries from the internet
+	"what is the IP of application1.mypublicdomain.com"
+
+PRIVATE HOSTED ZONE
+	resolves only INSIDE the VPCs you associate
+	"what is the IP of application1.company.internal"
+	★ the VPC needs enableDnsHostnames and enableDnsSupport on
+========================================================================== TTL
+
+how long a client caches the answer before asking again
+
+HIGH TTL (e.g. 24h)
+	+ less traffic to route 53, so cheaper
+	- clients may hold an OUTDATED record for a day
+
+LOW TTL (e.g. 60s)
+	+ records change quickly, easy to migrate
+	- more queries, so more cost
+
+★ TTL IS MANDATORY ON EVERY RECORD — EXCEPT ALIAS RECORDS
+
+★ the migration pattern: lower the TTL a day BEFORE you change
+  the record, change it, then raise the TTL again
+========================================================================== ★★ CNAME vs ALIAS — guaranteed exam question
+
+CNAME
+
+points a hostname to ANY other hostname
+
+★ ONLY works for a NON-ROOT domain
+	app.mydomain.com  ✔
+	mydomain.com      ✘  (this is the zone apex)
+
+you pay for the query
+
+TTL is yours to set
+
+ALIAS
+
+points a hostname to an AWS RESOURCE
+
+★ works for BOTH root and non-root domains
+
+★ FREE of charge
+
+★ has a NATIVE HEALTH CHECK
+
+★ you CANNOT set the TTL — route 53 sets it
+
+always of record type A or AAAA — it is an AWS extension to DNS
+
+the target's IP can change and the alias follows it automatically
+
+★ ALIAS TARGETS — what you CAN point at
+
+ELB (ALB / NLB / CLB)
+
+CloudFront distributions
+
+API Gateway
+
+Elastic Beanstalk environments
+
+S3 Websites (the website endpoint, not the plain bucket)
+
+VPC Interface Endpoints
+
+Global Accelerator
+
+another route 53 record in the SAME hosted zone
+
+★★ WHAT YOU CANNOT ALIAS — THE CLASSIC TRAP
+
+AN EC2 DNS NAME
+
+if the answer choice says "alias record pointing to an EC2
+instance", it is wrong
+========================================================================== ROUTING POLICIES
+
+they decide HOW route 53 answers, not how traffic is forwarded
+
+★ route 53 does NOT proxy any traffic — it only replies to
+  DNS queries. this distinction gets tested
+SIMPLE route to a single resource can return multiple values in ONE record -> ★ the CLIENT picks one at random, not route 53 if alias is used, only ONE AWS resource allowed ★ CANNOT be associated with health checks this is the defining limitation
+WEIGHTED control the % of requests going to each resource weight of a record / sum of all weights ★ the records must have the SAME NAME and the SAME TYPE CAN use health checks ★ weight 0 = stop sending traffic to that record ★ if ALL records are weight 0, they are all returned equally use - split traffic between regions, canary a new version
+LATENCY send the user to the resource with the LOWEST LATENCY ★ latency is measured between the USER and the AWS REGION it is NOT geography ★ so a user in Germany can be sent to us-east-1 if that is faster this is the trap — do not confuse it with geolocation CAN use health checks (gives failover)
+FAILOVER (active-passive) one PRIMARY record, one SECONDARY record ★ a health check on the PRIMARY is MANDATORY primary unhealthy -> route 53 answers with the secondary use - disaster recovery
+GEOLOCATION routing based on where the USER actually is specify continent / country / US state most precise match wins ★ ALWAYS create a "Default" record for when nothing matches omitting it is a stock wrong answer use - website localisation, content restriction, licensing
+GEOPROXIMITY routes on the location of USERS and RESOURCES ★ BIAS value shifts traffic toward or away from a resource positive bias = expand that resource's region negative bias = shrink it resources can be AWS (give a region) or non-AWS (give lat/long) ★ REQUIRES ROUTE 53 TRAFFIC FLOW this requirement is the exam trigger use - shift traffic from one region to another gradually
+IP-BASED routing decided by the CLIENT'S IP you supply a CIDR collection mapping client CIDRs -> endpoints use - send a known ISP's users to a specific endpoint, optimise performance, reduce network cost
+MULTI-VALUE ANSWER returns MULTIPLE healthy records for one query CAN use health checks — ★ only HEALTHY records are returned ★ up to 8 healthy records returned per query ★★ NOT A SUBSTITUTE FOR AN ELB this is client-side load balancing, there is no load balancer in the path
+
+★ SIMPLE vs MULTI-VALUE — the one-line difference
+
+both can return several values
+
+★ simple has NO health checks, so it can hand back a dead IP
+
+multi-value filters by health first
+========================================================================== HEALTH CHECKS
+
+★ HTTP health checks are for PUBLIC resources only
+
+three kinds
+
+1. monitor an ENDPOINT (app, server, other AWS resource)
+
+2. monitor OTHER HEALTH CHECKS  -> calculated health check
+
+3. monitor a CLOUDWATCH ALARM   -> full control
+
+MONITORING AN ENDPOINT
+
+~15 global health checkers probe the endpoint
+
+interval 30s by default, can be 10s (costs more)
+
+healthy / unhealthy threshold — default 3
+
+protocols - HTTP, HTTPS, TCP
+
+★ if MORE THAN 18% of checkers report healthy,
+  route 53 calls the endpoint healthy
+
+★ the endpoint must return a 2xx or 3xx status code to pass
+
+can match on text in the first 5120 bytes of the response
+
+★ you must allow the route 53 health checker IP RANGE
+  through your firewall / security group / NACL
+	if a question says "health check fails but the site works",
+	this is the answer
+
+CALCULATED HEALTH CHECKS
+
+combine several child health checks into one parent
+
+OR / AND / NOT
+
+up to 256 child health checks
+
+specify how many children must pass
+
+use - take a site down for maintenance without failing
+      every individual check
+
+★★ PRIVATE RESOURCES — the important one
+
+route 53 health checkers live OUTSIDE the VPC
+they cannot reach a private endpoint
+
+-> create a CLOUDWATCH METRIC + ALARM inside the VPC
+
+-> then create a health check that watches THE ALARM
+
+this chain is the standard exam answer for private health checks
+========================================================================== 3RD PARTY DOMAINS
+
+★ a DOMAIN REGISTRAR is not the same thing as a DNS SERVICE
+
+most registrars bundle a DNS service, but you can split them
+
+TO BUY ELSEWHERE AND HOST DNS IN ROUTE 53
+
+1. buy the domain at the 3rd party registrar
+
+2. create a PUBLIC HOSTED ZONE in route 53
+
+3. take the 4 name servers route 53 gives you
+
+4. update the NS RECORDS at the 3rd party registrar
+   to point at those name servers
+
+★ step 4 is the one that actually moves DNS control
+========================================================================== ROUTE 53 RESOLVER & HYBRID DNS
+
+ROUTE 53 RESOLVER - the default DNS inside every VPC
+
+reachable at the VPC base + 2 address (e.g. 10.0.0.2)
+
+also called the ".2 resolver"
+
+resolves public names, private hosted zones and EC2 names
+
+HYBRID DNS - resolving names BETWEEN a VPC and on-premises
+
+requires Direct Connect or a VPN — DNS does not create the link
+
+★★ THE TWO ENDPOINTS — direction is the whole question
+
+INBOUND ENDPOINT
+	on-premises  ->  AWS
+	on-prem resolvers forward queries INTO route 53
+
+OUTBOUND ENDPOINT
+	AWS  ->  on-premises
+	route 53 conditionally forwards queries OUT,
+	using RESOLVER RULES
+
+★ memory hook: named from AWS's point of view.
+  inbound = queries coming in to AWS
+
+RESOLVER RULES
+
+FORWARDING rules - send queries for a domain to a target IP
+
+SYSTEM rules - override a forwarding rule for a subdomain
+
+auto-defined system rules - built in, for AWS-internal names
+========================================================================== TO REVISIT / SHAKY
+CNAME vs ALIAS — re-derive WHY a CNAME cannot sit at the apex
+
+latency vs geolocation — these are the two most confusable policies
+
+geoproximity BIAS direction — positive expands, negative shrinks
+
+inbound vs outbound resolver endpoint direction
+
+the private-resource health check chain (alarm -> health check)
+========================================================================== NOT COVERED HERE — check lectures 120-121 and fill in
+lectures 120 and 121 were not visible in the screenshots
+
+DNSSEC signing in route 53
+
+route 53 traffic flow / traffic policies in detail
+
+domain transfer between registrars / between AWS accounts
+========================================================================== ⚠ STALE-WORLD FLAGS
+⚠ ALIAS TARGET LIST HAS GROWN
+	VPC interface endpoints and global accelerator are
+	newer additions. an older recording may list fewer targets
+
+⚠ IP-BASED ROUTING was added in 2022
+	present in this section (lecture 116), but older
+	course versions and older practice questions omit it
+
+⚠ ROUTE 53 PROFILES (2024)
+	share DNS configuration across many VPCs and accounts
+	almost certainly not in the recording; low exam risk so far
+
+⚠ GOOGLE DOMAINS no longer exists as a registrar
+	if lecture 118 uses it as the 3rd-party example,
+	the example is dead, the mechanism is unchanged
