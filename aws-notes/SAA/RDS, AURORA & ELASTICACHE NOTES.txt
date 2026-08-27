@@ -10,7 +10,7 @@ engines
 	postgres, mysql, mariadb, oracle, sql server, db2, aurora
 
 what aws manages
-	patching, backups, os, provisioning, monitoring
+	patching, backups, os, provisioning, monitoring, read replicas,scaling capability
 
 what you give up
 	★ NO SSH ACCESS to the instance
@@ -21,6 +21,10 @@ storage autoscaling
 
 why not just run mysql on ec2
 	because then you own every line above
+
+useful for apps with unpredictable workloads
+
+RDS custom- everything is managed by u apart from infra...like ec2 instance, updates,patching and monitoring and all of scaling capabililty...only for oracle and MS databases 
 ========================================================================== ★★ READ REPLICAS vs MULTI-AZ — the most tested confusion here
 
 READ REPLICAS = SCALING READS
@@ -28,7 +32,7 @@ READ REPLICAS = SCALING READS
 ASYNC replication
 	-> eventually consistent, reads can be slightly stale
 
-up to 5 (15 for aurora)
+up to 5 (15 for other apps)
 
 can sit same-az / cross-az / cross-region
 
@@ -52,13 +56,14 @@ SYNC replication to a standby in another az
 ★ multi-az is NOT for scaling
 	if the question says "improve read performance",
 	the answer is a read replica — never multi-az
+ZERO downtime
 
 one DNS name, failover is automatic (~60-120s)
 
 failover triggers
 	az loss, instance failure, storage failure, network loss
 
-single-az -> multi-az is ZERO DOWNTIME (just modify)
+single-az -> multi-az is ZERO DOWNTIME (just modify)...dont have to manually do anything
 
 ★ THE TRAP
 
@@ -73,6 +78,9 @@ MULTI-AZ DB CLUSTER — a third, newer thing
 semi-sync
 
 use when you want HA and want the standbys to do real work
+
+
+
 
 ⚠ added 2022 — older recordings do not mention it exists
 ========================================================================== RDS BACKUPS
@@ -113,6 +121,8 @@ KMS
 IN FLIGHT
 
 SSL / TLS
+
+NO SSH UNLESS RDS CUSTOM 
 
 NETWORK ACCESS
 
@@ -230,6 +240,9 @@ call sagemaker / comprehend from inside a SQL query
 storage config for I/O-heavy workloads, added 2023
 
 likely absent from the recording
+
+BABELFISH FOR POSTGRE
+allows postgre to understand msSQL language 
 ========================================================================== ELASTICACHE
 
 managed in-memory cache — redis / memcached / valkey
