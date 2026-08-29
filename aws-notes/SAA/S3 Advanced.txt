@@ -1,0 +1,86 @@
+S3 Advanced
+
+Lifecycle Rules
+
+Two actions: transition (move to a cheaper class after N days) and expire (delete after N days).
+
+Expire covers three cases:
+
+current version
+old (non-current) versions
+incomplete multipart uploads — invisible in the bucket, bill forever. The "why is my storage bill high" answer.
+
+Scope by bucket, prefix, or tag.
+
+★ Minimum storage durations — can't transition out earlier:
+
+Class				Minimum
+Standard-IA / One Zone-IA	30 days
+Glacier Instant Retrieval	90 days
+Glacier Flexible Retrieval	90 days
+Glacier Deep Archive	180 days
+
+Also: 30 days in Standard before either IA class. Transitions only go downhill in cost — no lifecycle back to Standard.
+
+S3 Analytics recommends when to do Standard → Standard-IA. Standard-IA only, not One Zone-IA or Glacier. First report takes 24–48h. Analytics recommends, Lifecycle acts.
+
+Requester Pays
+
+Requester pays request + download. Owner still pays storage. Requester must be an authenticated AWS principal — no anonymous.
+
+Event Notifications
+
+Events: ObjectCreated, ObjectRemoved, ObjectRestore, Replication. Filter on prefix and suffix only.
+
+Destinations: SNS, SQS, Lambda.
+
+★★ Trap: S3 does not assume a role. You attach a resource policy on the target allowing the S3 service principal — SNS topic policy, SQS queue policy, Lambda resource policy.
+
+Delivery usually seconds, occasionally a minute.
+
+EventBridge instead gives: filtering on metadata/size/name, targets like Step Functions and Kinesis, plus archive and replay. If the question needs richer filtering than prefix/suffix, or multiple destinations → EventBridge.
+
+S3 Performance
+
+★★ Per prefix: 3,500 writes/sec · 5,500 reads/sec. No limit on prefix count, so spread objects across prefixes to scale. Prefix = everything between bucket name and file name.
+
+Multi-part upload — recommended >100 MB, required >5 GB
+Transfer Acceleration — upload hits nearest CloudFront edge, crosses to bucket on AWS's private network
+Byte-range fetches — parallelise a download, or grab only part of an object
+
+⚠ Video's KMS-throttling caveat is stale. Quotas are adjustable now, and S3 Bucket Keys cut KMS calls ~99%. Bucket Keys is the current answer for KMS cost/throttling.
+
+Batch Operations
+
+Acts on a list you supply, across millions of existing objects. Can change metadata/tags/ACLs, copy between buckets, encrypt unencrypted objects, bulk-restore from Glacier, or invoke Lambda for anything else.
+
+Handles retries, progress, completion reports.
+
+★ The chain: S3 Inventory (list) → S3 Select or Athena (filter) → Batch Operations (act).
+
+Storage Lens
+
+Org-wide S3 analytics across accounts, regions, buckets, prefixes.
+
+Default dashboard: can be disabled, cannot be deleted. Scope not editable. Export daily to S3 as CSV or Parquet.
+
+Six categories: summary · cost optimisation · data protection · access management · events · performance.
+
+★★ Free vs Advanced:
+
+			Free	Advanced
+History			14 days	15 months
+Aggregation		bucket	bucket + prefix
+CloudWatch publishing	no	yes
+Recommendations		no	yes
+
+Prefix-level detail, CloudWatch alarms, or >2 weeks history → Advanced.
+
+⚠ Stale in the recording
+Encryption automatic since Jan 2023 (SSE-S3 by default). If the video says opt-in, it's dead.
+ACLs off by default since Apr 2023 (bucket-owner-enforced). Bucket policies are the answer now.
+Block Public Access on by default, Apr 2023.
+Strong read-after-write consistency since Dec 2020.
+S3 Bucket Keys (2021), Glacier Instant Retrieval (2021), Storage Lens groups (2023) — check whether each appears.
+
+⚠ Gap: screenshot covers 142–149 only. Missing whatever precedes 142 (likely the storage-classes lecture) and follows 149 (likely a Storage Lens hands-on). Get the real section boundaries.
