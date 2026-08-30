@@ -1,0 +1,67 @@
+S3 Security 
+
+Encryption — the five methods
+
+★★ The table the exam actually tests:
+
+Method	Who holds the key	Notes
+SSE-S3	AWS, fully managed	AES-256. Default for new objects since Jan 2023. Header x-amz-server-side-encryption: AES256
+SSE-KMS	You, via KMS	Gives you key rotation control and a CloudTrail trail of key usage. Header value aws:kms
+DSSE-KMS	You, via KMS	Two independent layers. Exists for compliance mandates. Header aws:kms:dsse
+SSE-C	You, sent per request	AWS never stores the key. HTTPS mandatory. Key in the HTTP header on every request. CLI/SDK only — not possible in the console
+Client-side	You, entirely	Encrypt before upload, decrypt after download. AWS never sees plaintext or key
+
+★ The SSE-KMS downside — every upload calls GenerateDataKey, every download calls Decrypt, and those count against your KMS request quota. On a high-throughput bucket you can throttle. S3 Bucket Keys cut those calls ~99% and are the fix.
+
+Deciding between them: need an audit trail of who used the key → SSE-KMS. Need to hold the key yourself but let AWS do the work → SSE-C. Regulator demands two layers → DSSE-KMS. Otherwise SSE-S3.
+
+Encryption in transit
+
+S3 has both HTTP and HTTPS endpoints. HTTPS is recommended, and mandatory for SSE-C.
+
+Force it with a bucket policy: Deny when aws:SecureTransport is false.
+
+Default Encryption vs forcing encryption
+Default encryption — SSE-S3 applies automatically now; you can raise the default to SSE-KMS or DSSE-KMS.
+Bucket policy — the only way to force a specific type. Deny PutObject when the encryption header is missing or wrong.
+
+★ Bucket policies are evaluated before default encryption kicks in.
+
+CORS
+
+Origin = scheme + host + port. Different on any one of the three = different origin.
+
+Browser rule: a page on origin A can't fetch from origin B unless B says it's allowed.
+
+How it works: browser sends a preflight OPTIONS with an Origin header → the bucket replies with Access-Control-Allow-Origin and Access-Control-Allow-Methods → the real request goes ahead.
+
+★ Exam shape: static website in one bucket pulling assets from a second bucket, requests failing. Answer is enabling CORS on the second bucket. Allow a specific origin or *.
+
+MFA Delete
+
+Requires versioning to be enabled.
+
+MFA is required for:
+
+permanently deleting an object version
+suspending versioning
+
+MFA is not required for enabling versioning or listing deleted versions.
+
+★★ Two constraints that show up as distractors: only the bucket owner / root account can turn it on or off, and it can only be done via CLI, not the console.
+
+S3 Access Logs
+
+Logs every request to a bucket — authorised or denied — into a second bucket. Queryable with Athena.
+
+Target bucket must be in the same region.
+⚠ Never point a bucket's logs at itself. Infinite loop, bill grows without limit. This is a favourite exam question.
+Delivery is best-effort and can lag by hours — not a real-time tool.
+
+★ Access Logs vs CloudTrail data events: access logs are request-level and cheap; CloudTrail data events give API-level auditing with IAM identity detail. Questions about who did something usually want CloudTrail.
+
+⚠ Stale in the recording
+Encryption is automatic since Jan 2023. If the video presents default encryption as something you switch on, that's out of date — it's already on.
+ACLs disabled by default on new buckets since Apr 2023; bucket policies are the current mechanism.
+Block Public Access on by default, Apr 2023.
+DSSE-KMS (2023) is present here at lecture 151, so this part of the course has been updated.
