@@ -1,0 +1,84 @@
+CloudFront & Global Accelerator
+
+[A - ENTIRE FILE] — rewrite the starred bits from memory before committing.
+
+CloudFront Overview (165)
+Content Delivery Network — caches content at ~450+ edge locations worldwide
+Improves read performance; users hit the nearest edge instead of the origin
+Reduces origin load — cache hits never reach the backend
+Built-in DDoS protection, integrates with AWS Shield and AWS WAF
+Traffic leaves the internet at the edge and crosses AWS's private network to the origin
+
+★★ Origins — know all four:
+
+Origin	Notes
+S3 bucket	Access controlled by Origin Access Control (OAC) + bucket policy
+S3 as a website	Bucket must have static website hosting enabled
+ALB / EC2	Must be public; security group must allow CloudFront edge IPs
+Any HTTP backend	On-premises servers, other clouds — anything reachable over HTTP
+
+★ OAC vs OAI — OAI is the legacy name. Origin Access Control (OAC) is current and is what you should answer. If the recording says OAI, mentally substitute OAC.
+
+★★ CloudFront vs S3 Cross-Region Replication — a classic comparison:
+
+CloudFront — global edge network, cached with a TTL, best for static content served everywhere
+CRR — replicates to specific regions, near real-time, read-only, best for dynamic content needed with low latency in a few regions
+CloudFront with S3 (166) and ALB/EC2 as origin (167)
+
+S3 origin setup:
+
+Create the distribution with the bucket as origin
+Enable OAC
+Update the bucket policy to allow the CloudFront service principal
+Result: the bucket stays fully private; only CloudFront can read it
+
+★ ALB/EC2 origin setup — the security chain runs two levels:
+
+EC2 origin — the instance's security group must allow the public IP ranges of CloudFront edge locations
+ALB origin — the ALB must be public and allow edge IPs; the EC2 instances behind it can stay private, allowing only the ALB's security group
+
+⚠ The EC2 or ALB must be publicly reachable. CloudFront cannot reach a private-subnet origin directly.
+
+Geo Restriction (168)
+Allowlist — only listed countries can access
+Blocklist — listed countries are blocked
+Country determined by a third-party geo-IP database
+Use case: copyright licensing rules restricting content by territory
+Cache Invalidation (169)
+Cached objects normally expire only when their TTL runs out
+Invalidation forces a refresh before that
+Can invalidate a specific path (/images/logo.jpg) or everything (/*)
+★ Invalidation is the answer when a question says "I updated the origin but users still see the old file"
+AWS Global Accelerator (170, 171)
+
+The problem it solves: users far from your application traverse many public-internet hops, each adding latency and loss.
+
+How it works:
+
+Traffic enters AWS at the nearest edge location, then crosses AWS's private global network to your application
+Uses Anycast IPs — every edge advertises the same IP, and the network routes you to the closest one
+
+★★ Two static Anycast IPs are provided. They never change — so no DNS propagation delay on failover, and clients can allowlist just those two.
+
+Health checks and failover:
+
+Health-checks your endpoints continuously
+Failover in under a minute, because the IP doesn't change
+Works with ALB, NLB, EC2 instances, and Elastic IPs, both public and private
+
+Also: built-in DDoS protection via AWS Shield.
+
+★★ CloudFront vs Global Accelerator — the comparison that gets tested
+	CloudFront	Global Accelerator
+Serves	cached content at the edge	no caching — proxies to the origin
+Best for	static content, cacheable HTTP	TCP/UDP, gaming, VoIP, IoT, non-HTTP protocols
+Also good for	dynamic content over HTTP	applications needing static IPs or fast regional failover
+
+Both use AWS's global edge network and both integrate with AWS Shield.
+
+★ Trigger words: "static IP address" or "non-HTTP protocol" or "fast regional failover" → Global Accelerator. "Cache" or "static website" → CloudFront.
+
+⚠ Stale in the recording
+OAI → OAC. Origin Access Control replaced Origin Access Identity in 2022. If the video only teaches OAI, that name is dead — OAC also supports SSE-KMS origins and all HTTP methods, which OAI did not.
+Edge location count — the number quoted in the video will be lower than current. Not examinable as a precise figure.
+CloudFront Functions vs Lambda@Edge — if the section doesn't cover CloudFront Functions (2021), that's a gap. Functions are lightweight JavaScript at the edge for header manipulation; Lambda@Edge is heavier and runs in regional edge caches.
