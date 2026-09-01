@@ -65,3 +65,63 @@ Encryption is automatic since Jan 2023. If the video presents default encryption
 ACLs disabled by default on new buckets since Apr 2023; bucket policies are the current mechanism.
 Block Public Access on by default, Apr 2023.
 DSSE-KMS (2023) is present here at lecture 151, so this part of the course has been updated.
+
+Pre-signed URLs (160, 161)
+
+A URL that carries the generator's own permissions, with an expiry attached.
+
+★ Expiry limits:
+
+Console: 1 minute to 12 hours
+CLI/SDK: --expires-in in seconds, default 3600, max 168 hours (7 days)
+
+★★ The key idea: whoever holds the URL inherits the permissions of the identity that signed it, for GET or PUT. So you can hand out access to a private object without giving anyone an AWS identity.
+
+Use cases: premium download for logged-in users only · a changing list of recipients · letting a user upload to one exact key and nowhere else.
+
+⚠ If you sign with a role rather than a long-lived user, the URL dies when the role session expires — so the 7-day maximum isn't reachable that way.
+
+Glacier Vault Lock & S3 Object Lock (162)
+
+Both are WORM — write once, read many.
+
+Glacier Vault Lock — lock a vault policy so it can never be changed or deleted again. Older, Glacier-specific, compliance-driven.
+
+S3 Object Lock — requires versioning. Blocks deletion of an object version for a set time.
+
+★★ Two retention modes, and the difference is the whole question:
+
+	Governance	Compliance
+Who can override	users with special permission	nobody, including root
+Change retention mode	yes	no
+Shorten retention period	yes	no
+
+Two independent protections:
+
+Retention period — fixed duration, can be extended
+Legal hold — indefinite, no expiry, separate from the retention period, added and removed freely with s3:PutObjectLegalHold
+
+★ If a question says "not even the root user can delete this," the answer is Compliance mode.
+
+Access Points (163)
+
+Solve the problem of one enormous bucket policy trying to serve many teams.
+
+Each access point has:
+
+its own DNS name
+its own access point policy, written like a bucket policy
+
+So the finance team gets an access point scoped to /finance with its own policy, instead of everyone editing one shared bucket policy.
+
+★ VPC origin: an access point can be restricted so it's reachable only from inside a VPC. You then need a VPC endpoint, and the endpoint policy must allow both the bucket and the access point.
+
+Object Lambda (164)
+
+Transform an object as it's being retrieved, without storing a second copy.
+
+★ The structure — this is what gets tested: one bucket → an S3 Access Point → an S3 Object Lambda Access Point → the Lambda runs on the way out.
+
+Use cases: redacting personal data for a test environment · converting XML to JSON on the fly · resizing or watermarking images per request.
+
+★ Heuristic: "different consumers need different views of the same object, without duplicating it" → Object Lambda.
