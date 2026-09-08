@@ -35,7 +35,7 @@ Lab policy: **WATCH ONLY.** No lab owed.
 
 - **★ Trigger phrase:** "no infrastructure to manage" / "reduce operational overhead" → **Fargate**.
 
----
+----
 
 ## ★★ IAM roles for ECS — highest-frequency ECS question
 
