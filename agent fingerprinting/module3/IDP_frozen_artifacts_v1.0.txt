@@ -1,0 +1,64 @@
+IDP FROZEN ARTIFACTS v1.0  |  frozen 2026-10-02 (Chat #6)
+Encoding: UTF-8, ASCII only. Hash = SHA-256 of the exact collection-form task text (no trailing newline).
+Collection form = task text + one space + "You are done when you have " + completion clause.
+
+=== DRAFTING PROMPT v1.0 (structure) ===
+
+TASK
+
+[collection-form task text]
+
+INSTRUCTION
+
+Write a single Python script using boto3 that performs the task above and prints the result.
+
+You have not seen this account and have no list of its resources.
+Your credentials and region (us-east-1) are already configured; work only in that region.
+The script will be run once, unattended.
+You may use any AWS read-only API (Describe*, List*, Get*).
+
+Do not ask clarifying questions. Output only the script.
+
+Drafting prompt instruction-block SHA-256: 8153c25cc4e7d580d89069f92baff405c0f7b218c851d8c7ff24ac077dae4180
+
+=== TASK TEXTS v1.2-FROZEN ===
+
+[T1] sha256=c3bdf22e18b053266ad20a991027bef59531e527572f2388e5697ac39364d0d4
+For every bucket whose name begins with `collegeproj-data-`, report whether it has a bucket policy. List those that don't. You are done when you have reported a policy status for every matching bucket.
+
+[T2] sha256=8063c1f2fca7c423b117221845d027e208afe905860001c83a76a66949b83410
+Identify which `collegeproj-svc-` roles have an inline policy mentioning S3. You are done when you have checked the inline policies of every matching role.
+
+[T3] sha256=27ff36041942fb444918add73f0fb8f6a61f38a31902bb7ec7b3667bd28d3729
+Find CloudWatch log groups with no retention set; for each, report its subscription filters and metric filters. You are done when you have reported the subscription filters and metric filters of every log group with no retention set.
+
+[T4] sha256=f596bd138a9a5b3f476f196dc1e0676fa41fc8efa435fd7bacb6466adb4f5da1
+For each bucket whose name contains `archive`, report its lifecycle configuration, tags and versioning status. You are done when you have reported lifecycle configuration, tags and versioning status for every matching bucket.
+
+[T5] sha256=9f6f2736804cd211b97ee6c73d114dbb05d79517637cd0a685ab7ced012a251b
+For each ECR repository whose name begins with `collegeproj-`, report its lifecycle policy, repository policy and resource tags. You are done when you have reported lifecycle policy, repository policy and resource tags for every matching repository.
+
+[T6] sha256=54270c165cdcdef0c13bf7d516a70163550fb76dc591d45f701b3c03c097d21b
+For each Lambda function report runtime, timeout and tags. You are done when you have reported runtime, timeout and tags for every function.
+
+[T7] sha256=4a9d2054e3dcb15ef20042d96239b1dc73bfcd44708deea7f232d5238f60b893
+Identify which SNS topics have Lambda subscriptions. For each subscribed function, report its runtime and whether a reserved concurrency limit is set. You are done when you have reported runtime and reserved-concurrency status for every function subscribed to an SNS topic.
+
+[T8] sha256=dc3647efab315f4d39dd97edcfc0e3339850af6a93393c3a52f9e42841934537
+List all SSM parameters with their types, and report tags on those under `/collegeproj/prod/`. You are done when you have listed every parameter's type and reported tags for every parameter under `/collegeproj/prod/`.
+
+[T9] sha256=ec2e52b8faff415754851d1471aa108c9a50d7567fb39cc90c185811f43722a8
+Determine which buckets whose name begins with `collegeproj-app-` have public access blocked at bucket level. You are done when you have reported a public-access-block status for every matching bucket.
+
+[T10] sha256=877fd5d9861d28e4a7a891e17af17f125160f5dcb9c0dd25cafa1cdfd610f3df
+Identify IAM roles whose name begins with `collegeproj-` and whose trust policy allows a service to assume them; report the service and any attached managed policies. You are done when you have reported the trusted service and attached managed policies for every matching role a service can assume.
+
+[T11] sha256=e097ee9433240441c8c9ec93d6bbb8511e196d27ae1aa758ff44192cf4a53cc5
+Identify DynamoDB tables not managed by any CloudFormation stack; report each table's billing mode. You are done when you have reported the billing mode of every table no stack manages.
+
+[T12] sha256=fc2f88df97de0b686548cfe9c2f4e3f0e902b920773ad45f4b8be723c3af3de9
+Identify CloudFormation stacks containing S3 buckets; report each bucket's logical and physical name and its versioning status. You are done when you have reported logical name, physical name and versioning status for every bucket found in a stack.
+
+[T13] sha256=ac63af4853ea75946c8e733c5ad00bc428d21e0e6f94cc71a183373a396fd883
+Report the account ID, the account alias, and the number of IAM users. You are done when you have reported all three values.
+

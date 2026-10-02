@@ -28,3 +28,4 @@ Land a strong SWE/Cloud role at placements (Aug 2028), then specialize into Clou
 
 ---
 *Started: [03/06/2026]*
+- [Agent fingerprinting (IDP)](agent%20fingerprinting/)

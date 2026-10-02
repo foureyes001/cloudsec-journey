@@ -73,3 +73,9 @@ __pycache__/
 *.pyc
 venv/
 .env
+logs/
+*.out.txt
+parse_output.txt
+__pycache__/
+trust.json
+trail-bucket-policy.json

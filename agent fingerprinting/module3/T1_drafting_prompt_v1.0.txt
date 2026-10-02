@@ -1,0 +1,14 @@
+TASK
+
+For every bucket whose name begins with `collegeproj-data-`, report whether it has a bucket policy. List those that don't. You are done when you have reported a policy status for every matching bucket.
+
+INSTRUCTION
+
+Write a single Python script using boto3 that performs the task above and prints the result.
+
+You have not seen this account and have no list of its resources.
+Your credentials and region (us-east-1) are already configured; work only in that region.
+The script will be run once, unattended.
+You may use any AWS read-only API (Describe*, List*, Get*).
+
+Do not ask clarifying questions. Output only the script.

@@ -1,0 +1,4 @@
+session,script,start_utc,exit_code
+aafab861-3355-4eeb-aef6-d9ddf5f2d945,t1_gpt.py,2026-10-02T12:50:09.4742081Z,0
+d6786b4f-ca88-4395-8b15-d1794de92c6e,t1_gemini.py,2026-10-02T12:51:06.6900046Z,0
+71a48537-c5ae-4679-bae2-af93703f1baf,t1_claude.py,2026-10-02T12:52:06.4136622Z,2

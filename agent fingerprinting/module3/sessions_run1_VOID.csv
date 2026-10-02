@@ -1,0 +1,4 @@
+session,script,start_utc,exit_code,note
+95c2c768-a799-4a68-8883-fada5e8bb8e3,t1_gpt.py,2026-10-02T09:37:58Z,2,VOID file missing
+681878e7-5ef5-4df7-b6b7-49219325e4a1,t1_gemini.py,2026-10-02T09:38:32Z,2,VOID file missing
+de7f84cd-fa5c-463b-9bd3-c2cd7bec13c5,t1_claude.py,2026-10-02T09:39:06Z,2,VOID file missing
