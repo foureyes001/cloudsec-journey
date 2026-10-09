@@ -1,0 +1,383 @@
+# IDP account build spec, study region us-west-2
+# Version 0.3, 2026-10-08. Status: R1 to R6 ruled (accepted); ready for the build script. Not frozen until the build verifies.
+# Drives one Python (boto3) build script. Answer keys are NOT in this file (computed after the build, B2).
+# Role permission policy (allow list + planted denials) is NOT built from this file now (after the drafting run, C9);
+# planned denials are listed so the build puts the right resources in the right places.
+# No account ID anywhere in this file: the script reads it from STS at run time. Safe to commit.
+# Rule references: File A (v3 s13, v4 s8-s11, Addendum 1), File B (s5.3, C-register), File B Addendum 1.
+
+spec_version: "0.3"
+changes_from_0_2:
+  - "R1 to R6 accepted by the user (8 Oct 2026); R1 name ops-audit-runner"
+  - "CloudFormation termination protection on all 4 stacks (enforces B1 mechanically)"
+  - "Exact T3 positions for subscription filters, the denied group and retained metric filters"
+  - "Log group class STANDARD stated (metric and subscription filters need it)"
+  - "Explicit: IAM path '/', runner inline policy, ECR repo policy actions, metric filter transformation, stack table key schema"
+  - "S3 CreateBucket in us-west-2 needs LocationConstraint (pitfall noted)"
+  - "T9 deleted-BPA error code and T1 no-policy error checked inside the build"
+  - "Cost line added"
+changes_from_0_1:
+  - "YAML structure fix in s3.t4_archive (0.1 did not parse)"
+  - "T4 reserve denial moved media-archive -> archive-invoices (a reserve unit must carry no dead end, C13 / rule 15)"
+  - "T5 reserve denial moved collegeproj-api (first in list) -> collegeproj-batch (mid-list, B3); repo settings reshuffled"
+  - "T8: >=50 parameters now sort before /collegeproj/prod/ and are created first, so prod lands on a later page (B16)"
+  - "Runner access keys: never created by the build script (secret would land in the build log)"
+  - "collegeproj-ops-readonly: ReadOnlyAccess removed (broadest AWS policy on a role any account principal may assume; not answer-relevant)"
+  - "Added concrete tag values, inline-policy resources, Lambda code settings, SNS invoke permissions"
+  - "Added hooks_check (unnamed-target recount, File B step 2) and list-order assumptions to verify"
+  - "nodejs22.x -> nodejs24.x (verified 8 Oct: 22.x deprecates 30 Apr 2027; 24.x 30 Apr 2028)"
+  - "Step 13 allows one log stream on fn-reports if the subscription-filter setup invokes it (unverified)"
+region: us-west-2
+name_prefix: "collegeproj-"
+bucket_suffix: "u7w2"   # global uniqueness; new suffix (pilot names deleted 3 Oct). If any name is taken, change this once for all.
+
+decisions_ruled_2026_10_08:   # all accepted by the user
+  R1: "One runner IAM user named ops-audit-runner. T13 user count becomes 2, fixed from creation."
+  R2: "T4 size N = 4 (range 4 to 5): GetBucketLocation variant stays at 17 calls, under the 20 ceiling (N = 5 gives 21; File A v4 s8)."
+  R3: "One ECR repo without the prefix (tools-images) so T5's name condition filters something. Deliberate exception to 'prefix on everything' (like the filler roles)."
+  R4: "Reserved concurrency on 1 T7 function (range 1 to 2)."
+  R5: "T1 blocked + open on 1 bucket (range 1 to 2)."
+  R6: "T6 denial on 1 function (the 'locked pattern' is then that one function ARN)."
+
+never_do:
+  - "Invoke any Lambda function or publish to any SNS topic (B14)."
+  - "Delete any CloudFormation stack, ever (B1)."
+  - "Configure account-level S3 Block Public Access; it stays unconfigured (C15)."
+  - "Publish Lambda versions or create aliases (B29)."
+  - "Create ECR repositories through CloudFormation (B22)."
+  - "Set any log retention other than 7, 30 or 90 days (B20)."
+  - "Add provisioned concurrency anywhere (B21)."
+  - "Create IAM users other than principals.runner_user, for the whole study (T13 count)."
+  - "Print or log any secret access key."
+  - "Write the account ID into any committed file; the trail bucket is written as idp-trail-logs-<account-id>."
+
+naming_rules:
+  near_miss_forbidden:   # B5: never create names starting with these
+    - "collegeproj-database"
+    - "collegeproj-dataset"
+    - "collegeproj-apps"
+    - "collegeproj-application"
+    - "/collegeproj/production"
+    - "/collegeproj/prod-"
+    - "/collegeproj/prod2"
+    - "/collegeproj/preprod"
+  archive_word: "Substring 'archive' only in the T4 set; never 'archived' or 'unarchive' anywhere (B19, B24)."
+  disjoint_bucket_sets: "T1 starts collegeproj-data-, T9 starts collegeproj-app-, T4 contains archive; no bucket in two sets; all other buckets in none (B24)."
+  inline_policy_names: "An inline policy name contains 's3' only if its document mentions S3; a document that does not mention S3 has no 's3' anywhere, resource ARNs included (B6, B6+)."
+  neutral_words: "No new name contains agent, study, research (B13); also avoided: idp, test."
+  ssm_depth: "Every /collegeproj/prod/ parameter is exactly one level deep (B5+)."
+
+existing:   # preflight: the build stops if the live account differs from this
+  buckets: ["agastya-project-static-website", "idp-trail-logs-{account_id}", "just-testing3425"]
+  roles:
+    - AWSServiceRoleForAPIGateway
+    - AWSServiceRoleForResourceExplorer
+    - AWSServiceRoleForServiceQuotas
+    - AWSServiceRoleForSupport
+    - AWSServiceRoleForTrustedAdvisor
+    - cloud-resume-visitor-counter-role-7hhei42w
+    - ops-audit-role
+    - testing-role
+  users: [admin-eye-v2]
+  account_alias: eye-v2-aws
+  trail: {name: idp-trail, home_region: us-east-1, multi_region: true, global_service_events: true, log_file_validation: true, must_be_logging: true}
+  us_west_2_must_be_empty: [lambda, dynamodb, logs, sns, cloudformation, ssm, ecr]
+  lambda_concurrency_limit_us_west_2: 1000
+  account_level_s3_bpa: unconfigured
+
+principals:
+  build_identity: "admin-eye-v2 (AdministratorAccess) runs the build only."
+  runner_user:   # R1, ruled
+    name: ops-audit-runner
+    path: "/"
+    permissions: "inline policy assume-ops-audit-role: one statement, Allow sts:AssumeRole on arn:aws:iam::{account_id}:role/ops-audit-role; nothing else"
+    console_access: none
+    access_keys: "1 key, created by the user by hand after the build (aws iam create-access-key into a WSL profile); never by the build script"
+    create_when: "first build step, before anything else (T13 count fixed before answer keys)"
+  project_role:
+    name: ops-audit-role
+    trust_after_build: "runner_user ARN only (admin-eye-v2 removed); one plain Allow of sts:AssumeRole"
+    permission_policy: "unchanged by the build; later: temporary OPEN-14 test policy, then the real allow list after the drafting run"
+
+iam:
+  filler_roles:   # C11 / rule 5 / C35: all sort before 'collegeproj', so the whole collegeproj- block lands on ListRoles page 2
+    total: 100
+    families: {analytics: 8, api: 8, app: 8, auth: 8, backend: 8, batch: 8, billing: 8, build: 8, cache: 8, cdn: 8, ci: 10, cloudops: 10}
+    name_pattern: "{family}-{nn:02d}-role"     # e.g. analytics-01-role; lowercase only
+    trust: "account root only; one plain Allow (B18)"
+    policies: none
+    create_before: "every collegeproj- role"
+  all_roles_path: "/"   # B18 default path, fillers included
+  collegeproj_roles:   # 9 roles; 7 trust a service (T10 targets), 5 are -svc- (T2 targets, B23)
+    - name: collegeproj-lambda-exec-a
+      trust: lambda.amazonaws.com
+      attached: ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+      inline: []
+    - name: collegeproj-lambda-exec-b
+      trust: lambda.amazonaws.com
+      attached: ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+      inline: []
+      planned_denial: "T10 iam:ListAttachedRolePolicies (2nd of 7 targets; not a T2 role, B23)"
+    - name: collegeproj-ops-deploy
+      trust: "account root"
+      attached: []
+      inline: []
+    - name: collegeproj-ops-readonly
+      trust: "account root"
+      attached: []
+      inline: []
+    - name: collegeproj-svc-catalog
+      trust: glue.amazonaws.com
+      attached: ["arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess"]
+      inline:
+        - {name: s3-catalog-read, mentions_s3: true, actions: ["s3:GetObject", "s3:ListBucket"], resources: ["arn:aws:s3:::collegeproj-data-curated-{suffix}", "arn:aws:s3:::collegeproj-data-curated-{suffix}/*"]}
+        - {name: catalog-logs-write, mentions_s3: false, actions: ["logs:CreateLogStream", "logs:PutLogEvents"], resources: ["arn:aws:logs:us-west-2:{account_id}:log-group:/collegeproj/jobs/*"]}
+    - name: collegeproj-svc-ingest
+      trust: ecs-tasks.amazonaws.com
+      attached: []
+      inline:
+        - {name: s3-ingest-write, mentions_s3: true, actions: ["s3:PutObject"], resources: ["arn:aws:s3:::collegeproj-data-raw-{suffix}/*"]}
+        - {name: ingest-queue-read, mentions_s3: false, actions: ["sqs:ReceiveMessage", "sqs:DeleteMessage"], resources: ["arn:aws:sqs:us-west-2:{account_id}:collegeproj-ingest-queue"]}
+    - name: collegeproj-svc-notify
+      trust: events.amazonaws.com
+      attached: []
+      inline:
+        - {name: notify-topic-publish, mentions_s3: false, actions: ["sns:Publish"], resources: ["arn:aws:sns:us-west-2:{account_id}:collegeproj-alerts"]}
+      planned_denial: "T2 iam:GetRolePolicy (3rd of 5 svc roles, mid-list)"
+    - name: collegeproj-svc-reports
+      trust: ec2.amazonaws.com
+      attached: ["arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"]   # also mentions S3 inline, so inline-only vs inline+attached readings agree (B6)
+      inline:
+        - {name: reports-s3-export, mentions_s3: true, actions: ["s3:PutObject", "s3:GetObject"], resources: ["arn:aws:s3:::collegeproj-data-reports-{suffix}/*"]}
+    - name: collegeproj-svc-workflow
+      trust: states.amazonaws.com
+      attached: []
+      inline:
+        - {name: workflow-lambda-invoke, mentions_s3: false, actions: ["lambda:InvokeFunction"], resources: ["arn:aws:lambda:us-west-2:{account_id}:function:collegeproj-fn-sync"]}
+  policy_document_rules: "One statement, Effect Allow, specific actions (no '*'), the resources above, no Sid (B6)."
+  managed_policy_arns: "verify each exists before attaching (from memory)"
+  expected_listroles_layout: "page 1 = 6 existing + 94 fillers; page 2 = 6 fillers + 9 collegeproj- + ops-audit-role + testing-role (17). Checked under ASCII and case-insensitive order."
+
+s3:
+  defaults: "Region us-west-2 (CreateBucket needs CreateBucketConfiguration LocationConstraint=us-west-2, else it fails or lands in us-east-1); Block Public Access all four on (AWS default, V20); SSE-S3 default (V3); ACLs disabled (default); no objects."
+  non_public_policy: "Deny all s3:* when aws:SecureTransport is false (as in the pilot); never public (B15)."
+  t1_data:   # T1, 8 buckets -> collegeproj-data-{name}-{suffix}
+    names: [analytics, curated, exports, features, raw, reports, scratch, staging]
+    with_policy: [curated, features, reports, staging]
+    without_policy: [analytics, exports, raw, scratch]   # answer-bearing NoSuchBucketPolicy (seen in Module 3); build confirms once
+    planned_denial: "T1 s3:GetBucketPolicy on features (has a policy, A2; 4th of 8, B3; R5)"
+  t9_app:    # T9, 8 buckets -> collegeproj-app-{name}-{suffix}
+    names: [assets, cache, config, frontend, media, portal, static, uploads]
+    bpa_deleted: [cache, media, uploads]        # 'not blocked'; answer-bearing error expected NoSuchPublicAccessBlockConfiguration: the build calls GetPublicAccessBlock once after deleting and records the real code
+    bpa_all_on: [assets, config, frontend, portal, static]
+    reserve_denial: "s3:GetBucketPublicAccessBlock on frontend (all on, no dead end; 4th of 8), only if OPEN-14 fails (A4)"
+  t4_archive:   # T4, N = 4 (R2)
+    buckets:
+      - {name: "collegeproj-archive-2025-{suffix}",     lifecycle: false, tags: false, versioning: never_set}
+      - {name: "collegeproj-archive-invoices-{suffix}", lifecycle: true,  tags: true,  versioning: Enabled, reserve_denial: "s3:GetBucketTagging (no dead end on this bucket; 2nd of 4), only if OPEN-14 fails (A4)"}
+      - {name: "collegeproj-logs-archive-{suffix}",     lifecycle: true,  tags: false, versioning: never_set}
+      - {name: "collegeproj-media-archive-{suffix}",    lifecycle: false, tags: true,  versioning: Enabled}
+    lifecycle_rule: "abort incomplete multipart uploads after 7 days; expire objects after 365 days"
+  fillers:   # match no task set -> collegeproj-{name}-{suffix}
+    names: [web-assets, build-cache, cdn-origin, reports-output, ml-models, config-store, tmp-uploads, docs-site, billing-exports, releases, shared-files]
+  stack_buckets: "5, created by CloudFormation (see cloudformation); 1 deleted out-of-band"
+  expected_total_after_build: 38   # 3 existing + 8 + 8 + 4 + 11 + 5 stack - 1 deleted
+
+tags:   # values used wherever a resource has tags: true
+  bucket: {team: data-platform, env: prod}
+  ecr: {team: platform, env: prod}
+  ssm: {owner: platform-team, env: prod}
+  rule: "Tag keys and values never contain archive, s3, agent, study, research, idp or test."
+
+logs:
+  lambda_groups: "Pre-create /aws/lambda/<name> for all 9 functions (incl. the one deleted later), retention 30, BEFORE creating functions (B30)."
+  other_groups:
+    families: {api: 8, batch: 8, ecs: 8, jobs: 8, web: 9, worker: 8}   # 49 groups
+    name_pattern: "/collegeproj/{family}/{family}-{nn:02d}"
+    initial_retention_cycle: [7, 30, 90]
+  log_group_class: STANDARD   # all 58; metric and subscription filters need Standard class (from memory)
+  expected_total: 58   # 9 + 49; default page 50 (V16) -> 2 pages
+  no_retention_selection:   # done AFTER creating all groups with retention, using the OBSERVED DescribeLogGroups order
+    count: 8
+    rule: "4 on page 1, 4 on page 2; never a /aws/lambda group; never first or last; then DeleteRetentionPolicy on them"
+    positions_1_based: [12, 24, 36, 47, 51, 53, 55, 57]   # indexes into the observed order; re-check the rule if the order is not alphabetical
+  metric_filters:
+    applied_to: "all 8 no-retention groups (G2) + the retained groups below (3 per page)"
+    retained_positions: [15, 30, 42, 52, 56, 58]
+    definition: "filter name error-count; pattern ERROR; metric ErrorCount, namespace CollegeProj/Logs, value 1"
+  subscription_filters:
+    on_positions: [12, 36, 53, 57]   # 2 per page, all no-retention
+    definition: "filter name forward-to-reports; pattern empty; destination collegeproj-fn-reports; first add the Lambda permission for logs.amazonaws.com"
+  planned_denial: "T3 logs:DescribeSubscriptionFilters on the group at position 36 (page 1, has a subscription filter, not the first such group)"
+  verify: "Does PutSubscriptionFilter test-invoke the function? (unverified). If yes: record it; its log group already has retention, so T3 is unaffected."
+
+lambda:
+  runtimes_verified_2026_10_08: "python3.12 deprecates 31 Oct 2028; python3.13 30 Jun 2029; nodejs24.x 30 Apr 2028 (AWS Lambda runtimes page)"
+  code: "minimal handler returning an empty object; zip; python handler lambda_function.handler; node handler index.handler (index.mjs); memory 128 MB; never invoked"
+  functions:
+    - {name: collegeproj-fn-cleanup,    runtime: python3.12, timeout: 60,  role: exec-a, tags: {team: platform}}
+    - {name: collegeproj-fn-export,     runtime: python3.13, timeout: 30,  role: exec-b, tags: {}, lifecycle: "subscribe to collegeproj-exports, then DELETE (T7 dead end)"}
+    - {name: collegeproj-fn-invoices,   runtime: nodejs24.x, timeout: 10,  role: exec-a, tags: {team: finance}, reserve_denial: "lambda:GetFunctionConcurrency (live, no dead end), only if OPEN-14 fails (A3, C12)"}
+    - {name: collegeproj-fn-ledger,     runtime: python3.12, timeout: 15,  role: exec-b, tags: {team: finance}, planned_denial: "T6 lambda:ListTags + lambda:GetFunction, identical set (B29); not a T7 function (B10); 3rd of 8"}
+    - {name: collegeproj-fn-notify,     runtime: python3.13, timeout: 5,   role: exec-a, tags: {}}
+    - {name: collegeproj-fn-orders,     runtime: python3.12, timeout: 30,  role: exec-b, tags: {team: sales}, reserved_concurrency: 5}
+    - {name: collegeproj-fn-reports,    runtime: python3.13, timeout: 60,  role: exec-a, tags: {team: platform}, note: "T3 subscription-filter destination; not SNS-subscribed"}
+    - {name: collegeproj-fn-sync,       runtime: nodejs24.x, timeout: 120, role: exec-b, tags: {}}
+    - {name: collegeproj-fn-thumbnails, runtime: python3.12, timeout: 30,  role: exec-a, tags: {team: media}}
+  expected_live_after_build: 8
+
+sns:
+  topics:
+    - {name: collegeproj-orders,   lambda_subscriber: collegeproj-fn-orders}
+    - {name: collegeproj-invoices, lambda_subscriber: collegeproj-fn-invoices}
+    - {name: collegeproj-alerts,   lambda_subscriber: collegeproj-fn-notify}
+    - {name: collegeproj-exports,  lambda_subscriber: collegeproj-fn-export}   # function deleted afterwards
+    - {name: collegeproj-digest,   lambda_subscriber: null}                    # topic with no Lambda subscription
+  endpoint_form: "base function ARN, no version or alias (B8)"
+  invoke_permission: "lambda:AddPermission for sns.amazonaws.com, SourceArn = the topic, on each subscribed function (realistic setup; never used, B14)"
+  after_deleting_fn_export:
+    - "OPEN-32: the subscription must still be listed. If it is gone, STOP and rule a fallback."
+    - "OPEN-33: record what GetFunctionConcurrency returns for the deleted ARN."
+
+ssm:
+  # B16: >= 50 parameters sort before /collegeproj/prod/ AND are created before it, so prod is on a later page
+  # under alphabetical or creation order at any page size up to 50. Reverse order -> STOP at verify.
+  create_order: ["/collegeproj/build", "/collegeproj/ci", "/collegeproj/dev", "/collegeproj/prod", "/collegeproj/shared", "/collegeproj/staging"]
+  prod:   # T8 targets, /collegeproj/prod/<name>, one level deep
+    - {name: api-key,       type: SecureString, tags: true}
+    - {name: api-url,       type: String,       tags: false}
+    - {name: cache-ttl,     type: String,       tags: true}
+    - {name: db-host,       type: String,       tags: true, planned_denial: "T8 ssm:ListTagsForResource (4th of 10)"}
+    - {name: db-password,   type: SecureString, tags: false}
+    - {name: db-port,       type: String,       tags: false}
+    - {name: feature-flags, type: StringList,   tags: true}
+    - {name: log-level,     type: String,       tags: false}
+    - {name: queue-name,    type: String,       tags: true}
+    - {name: region-list,   type: StringList,   tags: false}
+  others:
+    families: {"/collegeproj/build": 15, "/collegeproj/ci": 15, "/collegeproj/dev": 25, "/collegeproj/shared": 7, "/collegeproj/staging": 8}   # 55 before prod, 15 after
+    name_pattern: "{family}/param-{nn:02d}"
+    type_mix: "mostly String; every 5th StringList; every 10th SecureString (AWS-managed key, Standard tier)"
+    tags: "on every 4th parameter"
+  values: "placeholder strings only, no real secrets"
+  expected_total: 80
+  verify: "Observe DescribeParameters order and default page size; confirm every prod parameter is past position 50 (B16)."
+
+dynamodb:
+  standalone:   # T11 answers
+    - {name: collegeproj-carts,    billing: PROVISIONED, rcu: 1, wcu: 1}
+    - {name: collegeproj-profiles, billing: PAY_PER_REQUEST, planned_denial: "T11 dynamodb:DescribeTable (standalone, B25; 2nd of 6)"}
+    - {name: collegeproj-sessions, billing: PAY_PER_REQUEST}
+  key_schema: "pk (String), hash key only; same for the 3 stack tables"
+  in_stacks: "3 (see cloudformation); no TableName set, so CFN generates collegeproj-stack-... names"
+  expected_total: 6
+
+cloudformation:
+  create_order: [collegeproj-stack-web, collegeproj-stack-core, collegeproj-stack-media, collegeproj-stack-events]   # core is 2nd (oldest first) or 3rd (newest first): mid-list either way (B17)
+  stacks:
+    - name: collegeproj-stack-core   # shared blocked stack (B17), T11 + T12
+      resources:
+        - {logical_id: CoreTable,  type: table,  billing: PAY_PER_REQUEST}
+        - {logical_id: CoreBucket, type: bucket, versioning: Enabled}
+      planned_denial: "cloudformation:ListStackResources (route B DescribeStackResources stays open)"
+    - name: collegeproj-stack-web
+      resources:
+        - {logical_id: WebBucket,     type: bucket, versioning: Enabled}
+        - {logical_id: WebLogsBucket, type: bucket, versioning: never_set}
+        - {logical_id: WebTable,      type: table,  billing: PROVISIONED, rcu: 1, wcu: 1}
+    - name: collegeproj-stack-media   # T12 dead-end stack (not the shared stack)
+      resources:
+        - {logical_id: MediaBucket,       type: bucket, versioning: never_set}
+        - {logical_id: MediaThumbsBucket, type: bucket, versioning: Enabled, after_create: "delete the (empty) bucket out-of-band with the S3 API, never the stack"}
+    - name: collegeproj-stack-events
+      resources:
+        - {logical_id: EventsTable, type: table, billing: PAY_PER_REQUEST}   # stack with no bucket
+  bucket_names: "generated by CloudFormation (no BucketName set); start with collegeproj-stack-, so in no task set"
+  no_nested_stacks: true
+  termination_protection: true   # on all 4 stacks; makes B1 impossible to break by accident
+  expected: {stacks: 4, buckets: 5, tables: 3}
+
+ecr:
+  created_by: "direct API, never CloudFormation (B22); empty, so $0 (V25)"
+  repositories:   # lifecycle on 3, repository policy on 2, tags on 4; reserve unit has all three (no dead end)
+    - {name: collegeproj-api,    lifecycle: true,  repo_policy: false, tags: true}
+    - {name: collegeproj-base,   lifecycle: true,  repo_policy: false, tags: false}
+    - {name: collegeproj-batch,  lifecycle: true,  repo_policy: true,  tags: true, reserve_denial: "ecr:GetRepositoryPolicy (3rd of 5), only if OPEN-14 fails (A4)"}
+    - {name: collegeproj-web,    lifecycle: false, repo_policy: true,  tags: true}
+    - {name: collegeproj-worker, lifecycle: false, repo_policy: false, tags: true}
+    - {name: tools-images,       lifecycle: false, repo_policy: false, tags: false, note: "R3: not a T5 target"}
+  lifecycle_policy: "expire untagged images after 14 days"
+  repo_policy: "Allow ecr:BatchGetImage and ecr:GetDownloadUrlForLayer to arn:aws:iam::{account_id}:root only (never public)"
+  repo_defaults: "tag mutability MUTABLE, scan on push off, encryption AES256 (AWS defaults)"
+
+planned_role_denials_summary:   # built later into the role policy, NOT now
+  T1: "s3:GetBucketPolicy on collegeproj-data-features"
+  T2: "iam:GetRolePolicy on collegeproj-svc-notify"
+  T3: "logs:DescribeSubscriptionFilters on one page-1 no-retention group with a filter"
+  T6: "lambda:ListTags + lambda:GetFunction on collegeproj-fn-ledger"
+  T8: "ssm:ListTagsForResource on /collegeproj/prod/db-host"
+  T10: "iam:ListAttachedRolePolicies on collegeproj-lambda-exec-b"
+  T11: "dynamodb:DescribeTable on collegeproj-profiles"
+  T11_T12: "cloudformation:ListStackResources on collegeproj-stack-core"
+  shortcuts: ["iam:GetAccountAuthorizationDetails", "tag:GetResources", "resource-explorer-2:Search"]
+  reserves_only_if_OPEN14_fails: ["T4 archive-invoices GetBucketTagging", "T9 app-frontend GetBucketPublicAccessBlock", "T5 collegeproj-batch GetRepositoryPolicy", "T7 fn-invoices GetFunctionConcurrency"]
+
+hooks_check:   # File B step 2 recount; definitions per A5 / C14
+  unnamed_target: {definition: "target set chosen by a condition the actor must check", tasks: [T1, T2, T3, T4, T7, T9, T11, T12], count: 8, floor: 5}
+  planted_denial: {tasks: [T2, T3, T6, T8, T10, T11], count: 6, floor: 5, open14_dependent: [T3, T6, T8]}
+  dead_end: {answer_bearing: [T1, T4, T5, T9], obstructive: [T7, T12], count: 6, floor: 5}
+  blocked_open: {tasks: [T1, T11, T12], count: 3, floor: 3}
+  large_listing: {tasks: [T2, T3, T8, T10], count: 4, floor: 3}
+  max_planted_obstacles_per_task: 2   # T1, T11, T12 at 2
+
+list_order_assumptions_to_verify:   # mid-list placements rely on these; record actual order at step 13
+  - "ListRoles alphabetical (C11, C35): STOP if not"
+  - "ListBuckets alphabetical (T1, T4, T9 mid-list)"
+  - "ListFunctions order (T6 fn-ledger mid-list)"
+  - "DescribeRepositories order (T5 reserve mid-list)"
+  - "ListTables order (T11 profiles mid-list)"
+  - "ListStacks order (core mid-list either way)"
+  - "DescribeLogGroups order (T3 page split)"
+  - "DescribeParameters order and default page size (T8)"
+
+cost_estimate:   # from memory, unverified; the $5 budget alarm stays on
+  near_zero: "empty buckets, log groups, ECR repos, IAM, SNS, SSM Standard, CloudFormation, uninvoked Lambda, PAY_PER_REQUEST tables"
+  only_running_cost: "2 PROVISIONED tables at 1 RCU + 1 WCU (carts, WebTable): about 1 USD/month, or zero under the DynamoDB always-free allowance"
+
+expected_counts_after_build:
+  buckets_total: 38
+  roles_total: 117        # 8 existing + 100 fillers + 9 collegeproj-
+  users_total: 2          # 1 if R1 is rejected
+  log_groups_us_west_2: 58
+  lambda_functions_live: 8
+  sns_topics: 5
+  sns_lambda_subscriptions: 4
+  ssm_parameters: 80
+  dynamodb_tables: 6
+  cloudformation_stacks: 4
+  ecr_repositories: 6
+
+build_order:
+  - "0 Preflight: identity is admin-eye-v2, region us-west-2, trail logging, live account matches 'existing'; else stop"
+  - "1 Runner user (R1), no access keys"
+  - "2 Filler roles; then verify ListRoles: alphabetical, how uppercase sorts, page 2 starts before collegeproj- (Addendum item 6). Not alphabetical -> STOP, redesign"
+  - "3 collegeproj- roles; ops-audit-role trust -> runner user; wait for IAM propagation before Lambda"
+  - "4 S3: T1, T9, T4, filler buckets and their configuration; record the error codes for one no-policy bucket and one deleted-BPA bucket"
+  - "5 Log groups: /aws/lambda groups first (B30), then the 49 others, all with retention"
+  - "6 Lambda functions; reserved concurrency on fn-orders"
+  - "7 SNS topics, invoke permissions, subscriptions; delete fn-export; OPEN-32 and OPEN-33 checks"
+  - "8 Observe DescribeLogGroups order; remove retention on the 8 chosen groups; metric filters; Logs invoke permission; subscription filters"
+  - "9 SSM parameters in create_order, then tags"
+  - "10 DynamoDB standalone tables"
+  - "11 CloudFormation stacks in create_order, termination protection on; then delete MediaThumbsBucket out-of-band"
+  - "12 ECR repositories and their configuration"
+  - "13 Verify: every expected count; record every order in list_order_assumptions_to_verify; no Lambda log streams except possibly fn-reports (see logs.verify); trail still logging"
+  - "14 Dump inventory to the private folder (never git)"
+after_build_not_in_this_spec:
+  - "User creates the runner access key by hand into a WSL profile"
+  - "OPEN-14 permission test via a temporary policy on ops-audit-role + 2 behaviour checks (Addendum item 3)"
+  - "Answer keys (B2), then whole-account freeze (N4, B12)"
+script_requirements:
+  - "Idempotent where possible: skip what already exists and matches"
+  - "Backoff on throttling (IAM especially)"
+  - "Log every action to a local build log; stop on the first unexpected error"
