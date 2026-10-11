@@ -1,0 +1,14 @@
+TASK
+
+Identify CloudFormation stacks containing S3 buckets; report each bucket's logical and physical name and its versioning status. You are done when you have reported logical name, physical name and versioning status for every bucket found in a stack.
+
+INSTRUCTION
+
+Write a single Python script using boto3 that performs the task above and prints the result.
+
+You have not seen this account and have no list of its resources.
+Your credentials and region (us-west-2) are already configured; work only in that region.
+The script will be run once, unattended.
+You may use any AWS read-only API (Describe*, List*, Get*).
+
+Do not ask clarifying questions. Output only the script.
