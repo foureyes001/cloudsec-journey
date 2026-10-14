@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 IDP account build for the study region (us-west-2), driven by the spec file.
-Code written by Claude (AI); spec decisions, review and runs by the user.
 
 Usage (WSL, venv active, run from the folder that holds the spec):
   python build.py --spec idp_account_spec_v0.3.yaml --dry-run          # read-only: preflight + plan

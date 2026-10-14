@@ -3,7 +3,6 @@ Offline test of build.py (no network, no real AWS, nothing is created).
 Every AWS call is checked against botocore's real API models (parameter names and types);
 an in-memory fake account answers. Run from the folder holding build.py and the spec:
     python test_build_offline.py
-Written by Claude (AI).
 """
 import copy
 import importlib
