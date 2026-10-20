@@ -30,3 +30,5 @@
 
 
 2026-10-02 | #90 | Subsets II | COLD PASS | fixed 11/11 · fuzz 20k vs bitmask oracle, reused instance, 0 mismatches | Correct; dedup by set after generation
+
+| 2026-10-20 | 133 | Clone Graph | Cold pass (1-line empty-input fix) | 9/9 fixed · fuzz 0/20k |
