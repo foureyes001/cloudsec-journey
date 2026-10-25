@@ -12,4 +12,4 @@
 - Found: new account had Lambda concurrency limit 10, which blocks reserved concurrency (needed for T7). Requested 1000; us-west-2 now 1000.
 - Broke: WSL had no outbound network while Windows was fine. Fixed by restarting WSL (wsl --shutdown). Project work moving to WSL Ubuntu as a non-root user.
 - Decided: all collegeproj- roles on ListRoles page 2; permission-scoping test after the build; T1 re-run dropped (drafts hardcode us-east-1); build spec in YAML.
-- Learned: (your words, 2 to 3 lines)
+- Learned: (your words, 2 to 3 lines)- 2026-10-10: Built the us-west-2 study account from spec v0.3; verify all PASS. ListRoles is case-insensitive alphabetical; SNS subscriptions survive deletion of their Lambda.
