@@ -110,3 +110,12 @@ Solo · Aug 2026 → Jan/Feb 2027 · design decisions and open items.
 | **Multiclass vs pairwise ensemble** | Both cited precedents went multi-class. Decide before Phase 4. |
 | **Agent-using-a-script** | Genuine taxonomy hole. May touch the contribution sentence, not just task design. |
 | **Review-II date** | None yet. Outranks everything the day it appears. |
+
+2026-10-30: Model version pinning
+- Each study model is pinned to the exact model ID used for its draft-1 scripts. Gemini: gemini-3.5-flash-lite (a Stable model; responses report only this name, no dated version exists). Claude Haiku 5.5 and GPT-6 Luna: recorded at their drafting run.
+- Never use moving aliases (names ending in -latest).
+- Agent sessions use the same model ID. The agent runner records the model name returned on every call and stops if it differs from the pinned ID.
+- Before each agent batch, check the model is still listed (draft_scripts.py --list-models) and not on the provider's deprecation page.
+- If a pinned model is deprecated or replaced before collection ends: pause that model, re-draft its 26 scripts on the replacement, recheck the permission policy union, and disclose it. Sessions already collected stay as data, labelled by model.
+- Limitation to disclose: Google says Stable models usually do not change, but a silent update behind the same name cannot be detected from the API.
+- Pinned together with the model: thinking level medium, no system prompt, no tools, no web search.
