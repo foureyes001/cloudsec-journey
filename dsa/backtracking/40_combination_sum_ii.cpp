@@ -32,6 +32,7 @@
 #include <map>
 #include <algorithm>
 #include <iterator>
+#include <numeric>
 
 using namespace std;
 
